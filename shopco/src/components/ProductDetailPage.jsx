@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import ProductCard from './ProductCard'
 import { getProductById, getRelatedProducts } from '../data/productsData'
+import { useCart } from '../context/CartContext'
 import './ProductDetailPage.css'
 
 const reviews = [
@@ -33,6 +34,9 @@ const ProductDetailPage = ({ productId, onNavigateHome, onProductClick, onCatego
   const [activeTab, setActiveTab] = useState('Rating & Reviews')
   const [reviewSort, setReviewSort] = useState('Latest')
   const [sortOpen, setSortOpen] = useState(false)
+
+  const { addToCart } = useCart()
+  const [added, setAdded] = useState(false)
 
   if (!product) {
     return <div className="container" style={{ padding: '64px 0' }}>Product not found.</div>
@@ -159,7 +163,13 @@ const ProductDetailPage = ({ productId, onNavigateHome, onProductClick, onCatego
                   aria-label="Increase quantity"
                 >+</button>
               </div>
-              <button className="pdp-add-btn">Add to Cart</button>
+              <button className="pdp-add-btn" onClick={() => {
+                addToCart(product, selectedSize, product.colors[selectedColor], `Color ${selectedColor + 1}`)
+                setAdded(true)
+                setTimeout(() => setAdded(false), 2000)
+              }}>
+                {added ? '✓ Added to Cart!' : 'Add to Cart'}
+              </button>
             </div>
           </div>
         </div>

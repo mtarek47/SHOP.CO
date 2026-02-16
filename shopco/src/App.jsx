@@ -11,24 +11,42 @@ import Newsletter from './components/Newsletter'
 import Footer from './components/Footer'
 import CategoryPage from './components/CategoryPage'
 import ProductDetailPage from './components/ProductDetailPage'
+import CartPage from './components/CartPage'
 
-// Route state shape:
-//   { page: 'home' }
-//   { page: 'category', category: 'casual' }
-//   { page: 'product',  productId: 'casual-1', category: 'casual' }
+// Route: { page: 'home' | 'category' | 'product' | 'cart', category?, productId? }
 
 function App() {
   const [route, setRoute] = useState({ page: 'home' })
 
   const scroll = () => window.scrollTo({ top: 0, behavior: 'smooth' })
+  const navigateHome     = ()         => { setRoute({ page: 'home' }); scroll() }
+  const navigateCategory = (cat)      => { setRoute({ page: 'category', category: cat }); scroll() }
+  const navigateProduct  = (id, cat)  => { setRoute({ page: 'product', productId: id, category: cat }); scroll() }
+  const navigateCart     = ()         => { setRoute({ page: 'cart' }); scroll() }
 
-  const navigateHome = () => { setRoute({ page: 'home' }); scroll() }
+  const sharedProps = {
+    onLogoClick:       navigateHome,
+    onCartClick:       navigateCart,
+    onCategoryClick:   navigateCategory,
+    onSaleClick:       () => navigateCategory('casual'),    // On Sale → casual with sale badge filter
+    onNewArrivalsClick:() => navigateCategory('casual'),    // New Arrivals → casual
+    onSearchChange:    (val) => {
+      // If there's a search value, go to casual category (search happens there)
+      if (val) navigateCategory('casual')
+    },
+  }
 
-  const navigateCategory = (category) => { setRoute({ page: 'category', category }); scroll() }
-
-  const navigateProduct = (productId, category) => {
-    setRoute({ page: 'product', productId, category })
-    scroll()
+  // ── Cart Page ──
+  if (route.page === 'cart') {
+    return (
+      <>
+        <AnnouncementBar />
+        <Navbar {...sharedProps} />
+        <CartPage onNavigateHome={navigateHome} onCheckout={() => alert('Checkout coming soon!')} />
+        <Newsletter />
+        <Footer />
+      </>
+    )
   }
 
   // ── Product Detail Page ──
@@ -36,7 +54,7 @@ function App() {
     return (
       <>
         <AnnouncementBar />
-        <Navbar onLogoClick={navigateHome} />
+        <Navbar {...sharedProps} />
         <ProductDetailPage
           productId={route.productId}
           onNavigateHome={navigateHome}
@@ -54,7 +72,7 @@ function App() {
     return (
       <>
         <AnnouncementBar />
-        <Navbar onLogoClick={navigateHome} />
+        <Navbar {...sharedProps} />
         <CategoryPage
           category={route.category}
           onNavigateHome={navigateHome}
@@ -70,7 +88,7 @@ function App() {
   return (
     <>
       <AnnouncementBar />
-      <Navbar onLogoClick={navigateHome} />
+      <Navbar {...sharedProps} />
       <main>
         <Hero />
         <Brands />

@@ -1,37 +1,133 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
+import { useCart } from '../context/CartContext'
 import './Navbar.css'
 
-const Navbar = ({ onLogoClick }) => {
+const Navbar = ({ onLogoClick, onCartClick, onCategoryClick, onSaleClick, onNewArrivalsClick, onSearchChange }) => {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [shopDropOpen, setShopDropOpen] = useState(false)
+  const [searchVal, setSearchVal] = useState('')
+  const { itemCount } = useCart()
+  const dropRef = useRef(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropRef.current && !dropRef.current.contains(e.target)) {
+        setShopDropOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const handleNav = (e, cb) => {
+    e.preventDefault()
+    setMenuOpen(false)
+    setShopDropOpen(false)
+    cb && cb()
+  }
+
+  const handleSearch = (e) => {
+    setSearchVal(e.target.value)
+    onSearchChange && onSearchChange(e.target.value)
+  }
+
+  const categories = [
+    { label: 'Casual', slug: 'casual' },
+    { label: 'Formal', slug: 'formal' },
+    { label: 'Party',  slug: 'party'  },
+    { label: 'Gym',    slug: 'gym'    },
+  ]
 
   return (
     <header className="navbar">
       <div className="navbar-inner container">
+
         {/* Mobile: Hamburger */}
         <button
           className="nav-hamburger"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Toggle menu"
         >
-          <span></span>
-          <span></span>
-          <span></span>
+          <span className={menuOpen ? 'ham-open' : ''}></span>
+          <span className={menuOpen ? 'ham-open' : ''}></span>
+          <span className={menuOpen ? 'ham-open' : ''}></span>
         </button>
 
         {/* Logo */}
-        <a href="#" className="nav-logo" onClick={(e) => { e.preventDefault(); onLogoClick && onLogoClick() }}>SHOP.CO</a>
+        <a
+          href="#"
+          className="nav-logo"
+          onClick={(e) => handleNav(e, onLogoClick)}
+        >
+          SHOP.CO
+        </a>
 
         {/* Desktop nav links */}
         <nav className="nav-links">
-          <a href="#" className="nav-link">
-            Shop
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+
+          {/* Shop dropdown */}
+          <div className="nav-dropdown-wrap" ref={dropRef}>
+            <button
+              className={`nav-link nav-link-btn ${shopDropOpen ? 'nav-link--active' : ''}`}
+              onClick={() => setShopDropOpen(!shopDropOpen)}
+            >
+              Shop
+              <svg
+                className={`nav-chevron ${shopDropOpen ? 'nav-chevron--open' : ''}`}
+                width="16" height="16" viewBox="0 0 16 16" fill="none"
+              >
+                <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+
+            {shopDropOpen && (
+              <div className="nav-dropdown">
+                <p className="nav-dropdown-label">Browse by style</p>
+                {categories.map((cat) => (
+                  <a
+                    key={cat.slug}
+                    href="#"
+                    className="nav-dropdown-item"
+                    onClick={(e) => handleNav(e, () => onCategoryClick && onCategoryClick(cat.slug))}
+                  >
+                    {cat.label}
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                      <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <a
+            href="#"
+            className="nav-link"
+            onClick={(e) => handleNav(e, onSaleClick)}
+          >
+            On Sale
           </a>
-          <a href="#" className="nav-link">On Sale</a>
-          <a href="#" className="nav-link">New Arrivals</a>
-          <a href="#" className="nav-link">Brands</a>
+
+          <a
+            href="#"
+            className="nav-link"
+            onClick={(e) => handleNav(e, onNewArrivalsClick)}
+          >
+            New Arrivals
+          </a>
+
+          {/* Brands — loops through all categories as a shortcut */}
+          <div className="nav-dropdown-wrap">
+            <a
+              href="#"
+              className="nav-link"
+              onClick={(e) => handleNav(e, () => onCategoryClick && onCategoryClick('casual'))}
+            >
+              Brands
+            </a>
+          </div>
+
         </nav>
 
         {/* Desktop Search */}
@@ -43,39 +139,85 @@ const Navbar = ({ onLogoClick }) => {
             type="text"
             placeholder="Search for products..."
             className="nav-search-input"
+            value={searchVal}
+            onChange={handleSearch}
           />
+          {searchVal && (
+            <button className="search-clear" onClick={() => { setSearchVal(''); onSearchChange && onSearchChange('') }}>✕</button>
+          )}
         </div>
 
-        {/* Icons */}
+        {/* Right Icons */}
         <div className="nav-icons">
-          {/* Mobile search icon */}
+
+          {/* Mobile search */}
           <button className="nav-icon-btn mobile-search" aria-label="Search">
             <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
               <path d="M15.75 15.75L11.25 11.25M12.75 7.5C12.75 10.3995 10.3995 12.75 7.5 12.75C4.60051 12.75 2.25 10.3995 2.25 7.5C2.25 4.60051 4.60051 2.25 7.5 2.25C10.3995 2.25 12.75 4.60051 12.75 7.5Z" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
 
-          <button className="nav-icon-btn" aria-label="Cart">
+          {/* Cart */}
+          <button
+            className="nav-icon-btn nav-cart-btn"
+            aria-label={`Cart (${itemCount} items)`}
+            onClick={() => onCartClick && onCartClick()}
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
+            {itemCount > 0 && (
+              <span className="nav-cart-badge">{itemCount > 9 ? '9+' : itemCount}</span>
+            )}
           </button>
 
+          {/* Account */}
           <button className="nav-icon-btn" aria-label="Account">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
+
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Mobile Menu */}
       {menuOpen && (
         <nav className="mobile-menu">
-          <a href="#" className="mobile-menu-link">Shop</a>
-          <a href="#" className="mobile-menu-link">On Sale</a>
-          <a href="#" className="mobile-menu-link">New Arrivals</a>
-          <a href="#" className="mobile-menu-link">Brands</a>
+          <div className="mobile-menu-section">
+            <p className="mobile-menu-section-label">Shop by Style</p>
+            {categories.map((cat) => (
+              <a
+                key={cat.slug}
+                href="#"
+                className="mobile-menu-link"
+                onClick={(e) => handleNav(e, () => onCategoryClick && onCategoryClick(cat.slug))}
+              >
+                {cat.label}
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </a>
+            ))}
+          </div>
+          <div className="mobile-menu-divider" />
+          <a href="#" className="mobile-menu-link" onClick={(e) => handleNav(e, onSaleClick)}>On Sale</a>
+          <a href="#" className="mobile-menu-link" onClick={(e) => handleNav(e, onNewArrivalsClick)}>New Arrivals</a>
+          <a href="#" className="mobile-menu-link" onClick={(e) => handleNav(e, () => onCategoryClick && onCategoryClick('casual'))}>Brands</a>
+
+          {/* Mobile search bar */}
+          <div className="mobile-search-bar">
+            <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+              <path d="M15.75 15.75L11.25 11.25M12.75 7.5C12.75 10.3995 10.3995 12.75 7.5 12.75C4.60051 12.75 2.25 10.3995 2.25 7.5C2.25 4.60051 4.60051 2.25 7.5 2.25C10.3995 2.25 12.75 4.60051 12.75 7.5Z" stroke="#6B6B6B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <input
+              type="text"
+              placeholder="Search for products..."
+              className="nav-search-input"
+              value={searchVal}
+              onChange={handleSearch}
+            />
+          </div>
         </nav>
       )}
     </header>

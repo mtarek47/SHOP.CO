@@ -1,5 +1,6 @@
 import React from 'react'
 import './Hero.css'
+import heroImage from '../assets/hero-image.png' // Replace with actual image path
 
 const Hero = () => {
   return (
@@ -47,7 +48,7 @@ const Hero = () => {
           {/* Main hero image placeholder - replace with actual image */}
           <div className="hero-img-placeholder">
             <img
-              src="https://placehold.co/600x700/f2f0f1/000000?text=Hero+Model"
+              src="/src/assets/hero-image.png"
               alt="Fashion models"
               className="hero-img"
             />
