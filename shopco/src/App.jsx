@@ -25,15 +25,12 @@ function App() {
   const navigateCart     = ()         => { setRoute({ page: 'cart' }); scroll() }
 
   const sharedProps = {
-    onLogoClick:       navigateHome,
-    onCartClick:       navigateCart,
-    onCategoryClick:   navigateCategory,
-    onSaleClick:       () => navigateCategory('casual'),    // On Sale → casual with sale badge filter
-    onNewArrivalsClick:() => navigateCategory('casual'),    // New Arrivals → casual
-    onSearchChange:    (val) => {
-      // If there's a search value, go to casual category (search happens there)
-      if (val) navigateCategory('casual')
-    },
+    onLogoClick:        navigateHome,
+    onCartClick:        navigateCart,
+    onCategoryClick:    navigateCategory,
+    onSaleClick:        () => navigateCategory('casual'),
+    onNewArrivalsClick: () => navigateCategory('casual'),
+    onProductClick:     navigateProduct,
   }
 
   // ── Cart Page ──
