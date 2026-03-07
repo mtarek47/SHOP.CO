@@ -1,5 +1,15 @@
 // Central product data used by CategoryPage, ProductDetailPage, and "You Might Also Like"
 
+// Import all product assets from directory
+const productImages = import.meta.glob('../assets/Product assets/*.{png,jpg,jpeg,webp}', { eager: true })
+
+// Helper function to get image path
+const getProductImage = (imageName) => {
+  const imagePath = `../assets/Product assets/${imageName}`
+  return productImages[imagePath]?.default || null
+}
+
+
 export const allProducts = {
   casual: [
     {
@@ -8,11 +18,11 @@ export const allProducts = {
       price: 145,
       rating: 3.5,
       bgColor: '#f2f0f1',
-      image: 'https://placehold.co/400x480/f2f0f1/333?text=Graphic+Tshirt',
+      image: getProductImage('casual-1.png'),
       category: 'casual',
       description: 'A vibrant gradient graphic t-shirt perfect for any casual occasion. Crafted from a soft and breathable fabric, it offers superior comfort and style.',
       images: [
-        'https://placehold.co/400x480/f2f0f1/333?text=Graphic+Tshirt',
+        getProductImage('casual-1.png'),
         'https://placehold.co/400x480/e8e8e8/333?text=Back+View',
         'https://placehold.co/400x480/ddd/333?text=Side+View',
       ],

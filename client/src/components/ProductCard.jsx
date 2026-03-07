@@ -36,10 +36,10 @@ const ProductCard = ({ product, onClick }) => {
         <h3 className="product-name">{name}</h3>
         <StarRating rating={rating} />
         <div className="product-price-row">
-          <span className="product-price">${price}</span>
+          <span className="product-price">BDT {price}</span>
           {originalPrice && (
             <>
-              <span className="product-original-price">${originalPrice}</span>
+              <span className="product-original-price">BDT {originalPrice}</span>
               <span className="badge-sale">-{discount}%</span>
             </>
           )}
