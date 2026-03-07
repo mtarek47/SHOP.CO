@@ -3,42 +3,8 @@ import { allProducts } from '../data/productsData'
 
 const CartContext = createContext(null)
 
-// Pre-populate cart with 3 items matching the design
-const defaultItems = [
-  {
-    cartId: 'cart-casual-1',
-    productId: 'casual-1',
-    name: 'Gradient Graphic T-shirt',
-    image: 'https://placehold.co/100x100/f2f0f1/333?text=Tshirt',
-    size: 'Large',
-    color: 'White',
-    price: 145,
-    qty: 1,
-  },
-  {
-    cartId: 'cart-casual-5',
-    productId: 'casual-5',
-    name: 'Checkered Shirt',
-    image: 'https://placehold.co/100x100/f2f0f1/333?text=Shirt',
-    size: 'Medium',
-    color: 'Red',
-    price: 180,
-    qty: 1,
-  },
-  {
-    cartId: 'cart-casual-4',
-    productId: 'casual-4',
-    name: 'Skinny Fit Jeans',
-    image: 'https://placehold.co/100x100/f2f0f1/333?text=Jeans',
-    size: 'Large',
-    color: 'Blue',
-    price: 240,
-    qty: 1,
-  },
-]
-
 export const CartProvider = ({ children }) => {
-  const [items, setItems] = useState(defaultItems)
+  const [items, setItems] = useState([])
 
   const addToCart = (product, size, colorHex, colorName) => {
     const cartId = `cart-${product.id}-${size}-${colorHex}`

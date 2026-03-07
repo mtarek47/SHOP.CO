@@ -93,10 +93,10 @@ const ProductDetailPage = ({ productId, onNavigateHome, onProductClick, onCatego
             </div>
 
             <div className="pdp-price-row">
-              <span className="pdp-price">${product.price}</span>
+              <span className="pdp-price">BDT {product.price}</span>
               {product.originalPrice && (
                 <>
-                  <span className="pdp-original-price">${product.originalPrice}</span>
+                  <span className="pdp-original-price">BDT {product.originalPrice}</span>
                   <span className="badge-sale">-{product.discount}%</span>
                 </>
               )}
