@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import AnnouncementBar from './components/AnnouncementBar'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
@@ -16,7 +16,16 @@ import CartPage from './components/CartPage'
 // Route: { page: 'home' | 'category' | 'product' | 'cart', category?, productId? }
 
 function App() {
-  const [route, setRoute] = useState({ page: 'home' })
+  const [route, setRoute] = useState(() => {
+    // Initialize from localStorage
+    const saved = localStorage.getItem('currentRoute')
+    return saved ? JSON.parse(saved) : { page: 'home' }
+  })
+
+  // Save route to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('currentRoute', JSON.stringify(route))
+  }, [route])
 
   const scroll = () => window.scrollTo({ top: 0, behavior: 'smooth' })
   const navigateHome     = ()         => { setRoute({ page: 'home' }); scroll() }

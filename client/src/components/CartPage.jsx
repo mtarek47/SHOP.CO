@@ -68,7 +68,7 @@ const CartPage = ({ onNavigateHome, onCheckout }) => {
                       <p className="cart-item-meta">Color: {item.color}</p>
 
                       <div className="cart-item-bottom">
-                        <span className="cart-item-price">${item.price * item.qty}</span>
+                        <span className="cart-item-price">BDT{item.price * item.qty}</span>
                         <div className="cart-item-qty">
                           <button
                             className="qty-btn"
@@ -97,15 +97,15 @@ const CartPage = ({ onNavigateHome, onCheckout }) => {
               <div className="order-summary-rows">
                 <div className="order-row">
                   <span className="order-row-label">Subtotal</span>
-                  <span className="order-row-value">${subtotal}</span>
+                  <span className="order-row-value">BDT{subtotal}</span>
                 </div>
                 <div className="order-row">
                   <span className="order-row-label">Discount (-20%)</span>
-                  <span className="order-row-value order-row-discount">-${discountAmount}</span>
+                  <span className="order-row-value order-row-discount">BDT{-discountAmount}</span>
                 </div>
                 <div className="order-row">
                   <span className="order-row-label">Delivery Fee</span>
-                  <span className="order-row-value">${DELIVERY_FEE}</span>
+                  <span className="order-row-value">BDT{DELIVERY_FEE}</span>
                 </div>
               </div>
 
@@ -113,7 +113,7 @@ const CartPage = ({ onNavigateHome, onCheckout }) => {
 
               <div className="order-row order-total-row">
                 <span className="order-total-label">Total</span>
-                <span className="order-total-value">${total}</span>
+                <span className="order-total-value">BDT{total}</span>
               </div>
 
               {/* Promo code */}
