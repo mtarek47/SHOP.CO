@@ -12,7 +12,7 @@ const StarRating = ({ rating }) => {
           ★
         </span>
       ))}
-      <span className="rating-text">{rating}/5</span>
+      <span className="rating-text">{rating}/</span>
     </div>
   )
 }
