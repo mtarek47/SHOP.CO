@@ -6,7 +6,7 @@ import PaymentService from '../services/payment/PaymentService.js';
 // @route   POST /api/payments/checkout
 // @access  Private
 export const checkout = async (req, res) => {
-  const { cartItems, shippingAddress, paymentMethod } = req.body;
+  const { cartItems, shippingAddress, paymentMethod, customerDetails: bodyDetails } = req.body;
 
   if (!cartItems || cartItems.length === 0) {
     return res.status(400).json({ message: 'Cart is empty' });
@@ -50,7 +50,14 @@ export const checkout = async (req, res) => {
     const order = new Order({
       user: req.user._id,
       items: validatedItems,
-      shippingAddress,
+      shippingAddress: {
+        address: shippingAddress.address,
+        city: shippingAddress.city,
+        postalCode: shippingAddress.postalCode,
+        country: shippingAddress.country,
+        email: bodyDetails?.email || req.user.email,
+        phone: bodyDetails?.phone || '',
+      },
       totalAmount: calculatedTotal,
       paymentMethod,
       paymentStatus: 'pending',
@@ -61,8 +68,9 @@ export const checkout = async (req, res) => {
     // 3. Resolve the active payment gateway and create a session
     const gateway = PaymentService.getGateway(paymentMethod);
     const customerDetails = {
-      email: req.user.email,
+      email: bodyDetails?.email || req.user.email,
       name: req.user.name,
+      phone: bodyDetails?.phone || '',
     };
 
     const paymentSession = await gateway.createSession(savedOrder, customerDetails);

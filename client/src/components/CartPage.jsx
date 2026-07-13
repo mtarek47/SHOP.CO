@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
+import { paymentConfig } from '../config/paymentConfig'
 import './CartPage.css'
 
 const DISCOUNT_RATE = 0.20
@@ -19,9 +20,47 @@ const CartPage = ({ onNavigateHome }) => {
   const [city, setCity] = useState('')
   const [postalCode, setPostalCode] = useState('')
   const [country, setCountry] = useState('Bangladesh')
-  const [paymentMethod, setPaymentMethod] = useState('stripe')
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState(() => {
+    const activeKeys = Object.keys(paymentConfig.activeMethods).filter(
+      k => paymentConfig.activeMethods[k]
+    )
+    return activeKeys.includes('stripe') ? 'stripe' : activeKeys[0] || ''
+  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  
+  // Order History state
+  const [myOrders, setMyOrders] = useState([])
+  const [loadingOrders, setLoadingOrders] = useState(false)
+
+  const loadMyOrders = async () => {
+    setLoadingOrders(true)
+    try {
+      const res = await fetch('http://localhost:5000/api/orders/myorders', {
+        credentials: 'include'
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setMyOrders(data)
+      }
+    } catch (err) {
+      console.error('Failed to load user orders:', err)
+    } finally {
+      setLoadingOrders(false)
+    }
+  }
+
+  // Pre-fill email and load past orders
+  useEffect(() => {
+    if (user) {
+      if (user.email) setEmail(user.email)
+      loadMyOrders()
+    } else {
+      setMyOrders([])
+    }
+  }, [user])
 
   const discountAmount = Math.round(subtotal * DISCOUNT_RATE)
   const total = subtotal - discountAmount + DELIVERY_FEE
@@ -36,8 +75,16 @@ const CartPage = ({ onNavigateHome }) => {
       setError('Please login to checkout.')
       return
     }
-    if (!address || !city || !postalCode || !country) {
-      setError('Please fill in all shipping fields.')
+    if (!address || !city || !postalCode || !country || !email || !phone) {
+      setError('Please fill in all contact and shipping fields.')
+      return
+    }
+
+    // Phone number validation for all countries (E.164 standard check)
+    const phoneClean = phone.replace(/[\s\-()]/g, '')
+    const phoneRegex = /^\+?[0-9]{7,15}$/
+    if (!phoneRegex.test(phoneClean)) {
+      setError('Please enter a valid phone number (at least 7 digits, e.g., +8801712345678 or 01712345678).')
       return
     }
 
@@ -54,6 +101,7 @@ const CartPage = ({ onNavigateHome }) => {
         body: JSON.stringify({
           cartItems: items,
           shippingAddress: { address, city, postalCode, country },
+          customerDetails: { email, phone },
           paymentMethod,
         }),
       })
@@ -218,6 +266,30 @@ const CartPage = ({ onNavigateHome }) => {
                   <h3 className="checkout-form-title">Shipping & Payment</h3>
                   
                   {error && <p className="checkout-error-msg">{error}</p>}
+
+                  <div className="form-group">
+                    <label htmlFor="email">Email Address</label>
+                    <input 
+                      id="email"
+                      type="email" 
+                      required 
+                      value={email} 
+                      onChange={e => setEmail(e.target.value)} 
+                      placeholder="john@example.com"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="phone">Phone Number</label>
+                    <input 
+                      id="phone"
+                      type="tel" 
+                      required 
+                      value={phone} 
+                      onChange={e => setPhone(e.target.value)} 
+                      placeholder="e.g. +8801712345678"
+                    />
+                  </div>
                   
                   <div className="form-group">
                     <label htmlFor="address">Street Address</label>
@@ -270,30 +342,43 @@ const CartPage = ({ onNavigateHome }) => {
                   <div className="form-group">
                     <label>Select Payment Method</label>
                     <div className="payment-options">
-                      <label className={`payment-option ${paymentMethod === 'stripe' ? 'active' : ''}`}>
-                        <input 
-                          type="radio" 
-                          name="paymentMethod" 
-                          value="stripe" 
-                          checked={paymentMethod === 'stripe'}
-                          onChange={() => setPaymentMethod('stripe')} 
-                        />
-                        <span>International (Stripe / Cards)</span>
-                      </label>
-                      <label className={`payment-option ${paymentMethod === 'sslcommerz' ? 'active' : ''}`}>
-                        <input 
-                          type="radio" 
-                          name="paymentMethod" 
-                          value="sslcommerz" 
-                          checked={paymentMethod === 'sslcommerz'}
-                          onChange={() => setPaymentMethod('sslcommerz')} 
-                        />
-                        <span>Local (Bkash, Nagad, Cards)</span>
-                      </label>
+                      {paymentConfig.activeMethods.stripe && (
+                        <label className={`payment-option ${paymentMethod === 'stripe' ? 'active' : ''}`}>
+                          <input 
+                            type="radio" 
+                            name="paymentMethod" 
+                            value="stripe" 
+                            checked={paymentMethod === 'stripe'}
+                            onChange={() => setPaymentMethod('stripe')} 
+                          />
+                          <span>International (Stripe / Cards)</span>
+                        </label>
+                      )}
+                      {paymentConfig.activeMethods.sslcommerz && (
+                        <label className={`payment-option ${paymentMethod === 'sslcommerz' ? 'active' : ''}`}>
+                          <input 
+                            type="radio" 
+                            name="paymentMethod" 
+                            value="sslcommerz" 
+                            checked={paymentMethod === 'sslcommerz'}
+                            onChange={() => setPaymentMethod('sslcommerz')} 
+                          />
+                          <span>Local (Bkash, Nagad, Cards)</span>
+                        </label>
+                      )}
+                      {!paymentConfig.activeMethods.stripe && !paymentConfig.activeMethods.sslcommerz && (
+                        <p className="checkout-error-msg" style={{ marginTop: 0 }}>
+                          Checkouts are temporarily disabled. No active payment gateways available.
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  <button className="proceed-payment-btn" type="submit" disabled={loading}>
+                  <button 
+                    className="proceed-payment-btn" 
+                    type="submit" 
+                    disabled={loading || (!paymentConfig.activeMethods.stripe && !paymentConfig.activeMethods.sslcommerz)}
+                  >
                     {loading ? 'Processing...' : 'Proceed to Payment'}
                   </button>
                   <button className="cancel-checkout-btn" type="button" onClick={() => setShowCheckoutForm(false)}>
@@ -303,6 +388,58 @@ const CartPage = ({ onNavigateHome }) => {
               )}
             </div>
 
+          </div>
+        )}
+
+        {/* ── Order History Section ── */}
+        {user && (
+          <div className="order-history-section">
+            <h2 className="order-history-title">My Orders</h2>
+            {loadingOrders ? (
+              <p>Loading orders...</p>
+            ) : myOrders.length === 0 ? (
+              <div className="empty-orders">
+                <p>You haven't placed any orders yet.</p>
+              </div>
+            ) : (
+              <div className="orders-list">
+                {myOrders.map(order => (
+                  <div key={order._id} className="order-card">
+                    <div className="order-card-header">
+                      <div>
+                        <p className="order-card-id">ORDER ID: {order._id}</p>
+                        <p className="order-card-date">Placed on: {new Date(order.createdAt).toLocaleDateString()}</p>
+                      </div>
+                      <div className="order-card-status">
+                        <span className={`status-badge status-pay-${order.paymentStatus}`}>
+                          Payment: {order.paymentStatus}
+                        </span>
+                        <span className={`status-badge status-del-${order.deliveryStatus}`}>
+                          Delivery: {order.deliveryStatus}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="order-card-items">
+                      {order.items.map((item, index) => (
+                        <div key={index} className="order-item-row">
+                          <img src={item.image} alt={item.name} className="order-item-img" />
+                          <div className="order-item-info">
+                            <p className="order-item-name">{item.name}</p>
+                            <p className="order-item-meta">Size: {item.size} | Color: {item.color}</p>
+                            <p className="order-item-price">BDT {item.price} x {item.qty}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="order-card-footer">
+                      <p className="order-total-text">Total: <strong>BDT {order.totalAmount}</strong></p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

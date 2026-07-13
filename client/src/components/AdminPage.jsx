@@ -159,6 +159,8 @@ const AdminPage = ({ onNavigateHome }) => {
   }
 
   const handleUpdateDelivery = async (orderId, status) => {
+    setErrorMsg('')
+    setSuccessMsg('')
     try {
       const res = await fetch(`${API_URL}/admin/orders/${orderId}/deliver`, {
         method: 'PUT',
@@ -169,26 +171,35 @@ const AdminPage = ({ onNavigateHome }) => {
       if (res.ok) {
         setSuccessMsg('Delivery status updated!')
         loadOrders()
+      } else {
+        const data = await res.json()
+        setErrorMsg(data.message || 'Failed to update delivery status')
       }
     } catch (err) {
       console.error(err)
+      setErrorMsg('Failed to connect to server.')
     }
   }
 
-  const handleUpdatePayment = async (orderId, status) => {
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to cancel/delete this order?')) return
+    setErrorMsg('')
+    setSuccessMsg('')
     try {
-      const res = await fetch(`${API_URL}/admin/orders/${orderId}/pay`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ status })
+      const res = await fetch(`${API_URL}/admin/orders/${orderId}`, {
+        method: 'DELETE',
+        credentials: 'include'
       })
       if (res.ok) {
-        setSuccessMsg('Payment status updated!')
+        setSuccessMsg('Order cancelled successfully!')
         loadOrders()
+      } else {
+        const data = await res.json()
+        setErrorMsg(data.message || 'Delete failed')
       }
     } catch (err) {
       console.error(err)
+      setErrorMsg('Failed to connect to server.')
     }
   }
 
@@ -281,6 +292,7 @@ const AdminPage = ({ onNavigateHome }) => {
                     <th>Payment Status</th>
                     <th>Delivery Status</th>
                     <th>Date</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -289,23 +301,22 @@ const AdminPage = ({ onNavigateHome }) => {
                       <td style={{ fontSize: '12px', fontFamily: 'monospace' }}>{o._id}</td>
                       <td>
                         <div><strong>{o.user?.name || 'Guest'}</strong></div>
-                        <div style={{ fontSize: '11px', color: 'var(--gray-500)' }}>{o.user?.email}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--gray-500)' }}>
-                          {o.shippingAddress?.address}, {o.shippingAddress?.city}
+                        <div style={{ fontSize: '11px', color: 'var(--gray-600)', marginTop: '4px' }}>
+                          📧 {o.shippingAddress?.email || o.user?.email}
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--gray-600)' }}>
+                          📞 {o.shippingAddress?.phone || 'N/A (Old Order)'}
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--gray-500)', marginTop: '4px' }}>
+                          📍 {o.shippingAddress?.address}, {o.shippingAddress?.city}, {o.shippingAddress?.postalCode}, {o.shippingAddress?.country}
                         </div>
                       </td>
                       <td style={{ fontWeight: '600' }}>BDT {o.totalAmount}</td>
                       <td style={{ textTransform: 'uppercase', fontSize: '12px' }}>{o.paymentMethod}</td>
                       <td>
-                        <select 
-                          value={o.paymentStatus}
-                          onChange={(e) => handleUpdatePayment(o._id, e.target.value)}
-                          className={`status-select status-pay-${o.paymentStatus}`}
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="paid">Paid</option>
-                          <option value="failed">Failed</option>
-                        </select>
+                        <span className={`status-badge status-pay-${o.paymentStatus}`}>
+                          {o.paymentStatus}
+                        </span>
                       </td>
                       <td>
                         <select 
@@ -319,6 +330,15 @@ const AdminPage = ({ onNavigateHome }) => {
                         </select>
                       </td>
                       <td style={{ fontSize: '12px' }}>{new Date(o.createdAt).toLocaleDateString()}</td>
+                      <td>
+                        <button 
+                          onClick={() => handleDeleteOrder(o._id)} 
+                          className="action-btn-delete"
+                          style={{ padding: '6px 12px', fontSize: '12px' }}
+                        >
+                          Cancel
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

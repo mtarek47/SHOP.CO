@@ -145,3 +145,21 @@ export const updateOrderPaymentStatus = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Delete/Cancel an order
+// @route   DELETE /api/admin/orders/:id
+// @access  Private/Admin
+export const deleteOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (order) {
+      await order.deleteOne();
+      res.json({ message: 'Order removed successfully' });
+    } else {
+      res.status(404).json({ message: 'Order not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

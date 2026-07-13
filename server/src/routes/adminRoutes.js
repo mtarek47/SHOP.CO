@@ -6,6 +6,7 @@ import {
   getOrders,
   updateOrderDeliveryStatus,
   updateOrderPaymentStatus,
+  deleteOrder,
 } from '../controllers/adminController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
@@ -24,5 +25,6 @@ router.delete('/admin/products/:id', deleteProduct);
 router.get('/admin/orders', getOrders);
 router.put('/admin/orders/:id/deliver', updateOrderDeliveryStatus);
 router.put('/admin/orders/:id/pay', updateOrderPaymentStatus);
+router.delete('/admin/orders/:id', deleteOrder);
 
 export default router;

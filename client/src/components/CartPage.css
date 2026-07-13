@@ -489,6 +489,8 @@
 }
 
 .form-group input {
+  width: 100%;
+  box-sizing: border-box;
   padding: 12px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--gray-200);
@@ -576,4 +578,133 @@
 .cancel-checkout-btn:hover {
   color: var(--black);
 }
+
+/* ── Order History Section ── */
+.order-history-section {
+  margin-top: 50px;
+  border-top: 1px solid var(--gray-200);
+  padding-top: 40px;
+  margin-bottom: 40px;
+}
+
+.order-history-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 24px;
+  text-transform: uppercase;
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.order-card {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  background-color: var(--white);
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--gray-100);
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.order-card-id {
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 4px;
+}
+
+.order-card-date {
+  font-size: 13px;
+  color: var(--gray-500);
+}
+
+.order-card-status {
+  display: flex;
+  gap: 10px;
+}
+
+.order-card-items {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.order-item-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.order-item-img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  background-color: var(--off-white);
+  flex-shrink: 0;
+}
+
+.order-item-info {
+  flex: 1;
+}
+
+.order-item-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--black);
+  margin-bottom: 2px;
+}
+
+.order-item-meta {
+  font-size: 12px;
+  color: var(--gray-500);
+  margin-bottom: 2px;
+}
+
+.order-item-price {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--black);
+}
+
+.order-card-footer {
+  border-top: 1px solid var(--gray-100);
+  padding-top: 16px;
+  margin-top: 16px;
+  text-align: right;
+}
+
+.order-total-text {
+  font-size: 15px;
+  color: var(--gray-600);
+}
+
+.order-total-text strong {
+  font-size: 18px;
+  color: var(--black);
+}
+
+.empty-orders {
+  text-align: center;
+  padding: 30px;
+  background-color: var(--off-white);
+  border-radius: var(--radius-lg);
+  color: var(--gray-500);
+}
+
 
