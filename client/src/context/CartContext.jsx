@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { allProducts } from '../data/productsData'
 
 const CartContext = createContext(null)
 

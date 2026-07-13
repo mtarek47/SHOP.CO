@@ -1,20 +1,46 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
 import SearchModal from './Searchmodal'
 import './Navbar.css'
 
-const Navbar = ({ onLogoClick, onCartClick, onCategoryClick, onSaleClick, onNewArrivalsClick, onProductClick }) => {
+const Navbar = ({ 
+  onLogoClick, 
+  onCartClick, 
+  onCategoryClick, 
+  onSaleClick, 
+  onNewArrivalsClick, 
+  onProductClick,
+  onAdminClick 
+}) => {
   const [menuOpen, setMenuOpen]       = useState(false)
   const [shopDropOpen, setShopDropOpen] = useState(false)
   const [searchOpen, setSearchOpen]   = useState(false)
+  
+  // Auth states
+  const { user, login, register, logout } = useAuth()
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showAccountDropdown, setShowAccountDropdown] = useState(false)
+  const [isLoginView, setIsLoginView] = useState(true) // true = Login, false = Register
+  
+  // Form values
+  const [authName, setAuthName] = useState('')
+  const [authEmail, setAuthEmail] = useState('')
+  const [authPassword, setAuthPassword] = useState('')
+  const [authError, setAuthError] = useState('')
+  
   const { itemCount } = useCart()
   const dropRef = useRef(null)
+  const accountRef = useRef(null)
 
   // Close shop dropdown when clicking outside
   useEffect(() => {
     const handler = (e) => {
       if (dropRef.current && !dropRef.current.contains(e.target)) {
         setShopDropOpen(false)
+      }
+      if (accountRef.current && !accountRef.current.contains(e.target)) {
+        setShowAccountDropdown(false)
       }
     }
     document.addEventListener('mousedown', handler)
@@ -38,6 +64,44 @@ const Navbar = ({ onLogoClick, onCartClick, onCategoryClick, onSaleClick, onNewA
     setMenuOpen(false)
     setShopDropOpen(false)
     cb && cb()
+  }
+
+  const handleAuthSubmit = async (e) => {
+    e.preventDefault()
+    setAuthError('')
+    
+    if (isLoginView) {
+      const res = await login(authEmail, authPassword)
+      if (res.success) {
+        setShowAuthModal(false)
+        setAuthPassword('')
+      } else {
+        setAuthError(res.message || 'Login failed')
+      }
+    } else {
+      if (!authName) {
+        setAuthError('Name is required')
+        return
+      }
+      const res = await register(authName, authEmail, authPassword)
+      if (res.success) {
+        setShowAuthModal(false)
+        setAuthName('')
+        setAuthEmail('')
+        setAuthPassword('')
+      } else {
+        setAuthError(res.message || 'Registration failed')
+      }
+    }
+  }
+
+  const handleAccountClick = () => {
+    if (user) {
+      setShowAccountDropdown(!showAccountDropdown)
+    } else {
+      setAuthError('')
+      setShowAuthModal(true)
+    }
   }
 
   const categories = [
@@ -139,13 +203,51 @@ const Navbar = ({ onLogoClick, onCartClick, onCategoryClick, onSaleClick, onNewA
               )}
             </button>
 
-            {/* Account */}
-            <button className="nav-icon-btn" aria-label="Account">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"
-                  stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
+            {/* Account Profile and Dropdown */}
+            <div className="account-dropdown-wrap" ref={accountRef}>
+              <button 
+                className={`nav-icon-btn ${user ? 'nav-account-active' : ''}`} 
+                aria-label="Account"
+                onClick={handleAccountClick}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"
+                    stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              
+              {showAccountDropdown && user && (
+                <div className="account-dropdown">
+                  <div className="account-dropdown-header">
+                    <p className="account-name">{user.name}</p>
+                    <p className="account-email">{user.email}</p>
+                  </div>
+                  <hr className="dropdown-divider" />
+                  
+                  {user.role === 'admin' && (
+                    <button 
+                      className="dropdown-item admin-link"
+                      onClick={() => {
+                        setShowAccountDropdown(false);
+                        onAdminClick && onAdminClick();
+                      }}
+                    >
+                      🛡️ Admin Dashboard
+                    </button>
+                  )}
+                  
+                  <button 
+                    className="dropdown-item logout-btn"
+                    onClick={() => {
+                      logout();
+                      setShowAccountDropdown(false);
+                    }}
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -192,6 +294,78 @@ const Navbar = ({ onLogoClick, onCartClick, onCategoryClick, onSaleClick, onNewA
           onCategoryClick && onCategoryClick(slug)
         }}
       />
+
+      {/* Authentication Modal */}
+      {showAuthModal && (
+        <div className="auth-modal-overlay" onClick={() => setShowAuthModal(false)}>
+          <div className="auth-modal" onClick={e => e.stopPropagation()}>
+            <div className="auth-modal-header">
+              <h3>{isLoginView ? 'LOG IN' : 'CREATE AN ACCOUNT'}</h3>
+              <button className="auth-modal-close" onClick={() => setShowAuthModal(false)}>✕</button>
+            </div>
+            
+            {authError && <p className="auth-error">{authError}</p>}
+            
+            <form onSubmit={handleAuthSubmit} className="auth-form">
+              {!isLoginView && (
+                <div className="form-group">
+                  <label htmlFor="auth-name">Full Name</label>
+                  <input 
+                    id="auth-name"
+                    type="text" 
+                    required 
+                    placeholder="e.g. John Doe"
+                    value={authName}
+                    onChange={e => setAuthName(e.target.value)}
+                  />
+                </div>
+              )}
+              
+              <div className="form-group">
+                <label htmlFor="auth-email">Email Address</label>
+                <input 
+                  id="auth-email"
+                  type="email" 
+                  required 
+                  placeholder="e.g. john@example.com"
+                  value={authEmail}
+                  onChange={e => setAuthEmail(e.target.value)}
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="auth-password">Password</label>
+                <input 
+                  id="auth-password"
+                  type="password" 
+                  required 
+                  placeholder="At least 6 characters"
+                  value={authPassword}
+                  onChange={e => setAuthPassword(e.target.value)}
+                />
+              </div>
+              
+              <button className="auth-submit-btn" type="submit">
+                {isLoginView ? 'Log In' : 'Sign Up'}
+              </button>
+              
+              <p className="auth-switch-text">
+                {isLoginView ? "Don't have an account? " : "Already have an account? "}
+                <button 
+                  type="button" 
+                  className="auth-switch-btn"
+                  onClick={() => {
+                    setIsLoginView(!isLoginView);
+                    setAuthError('');
+                  }}
+                >
+                  {isLoginView ? 'Sign Up' : 'Log In'}
+                </button>
+              </p>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   )
 }

@@ -1,0 +1,307 @@
+.admin-page {
+  padding: 40px 0;
+  min-height: 80vh;
+  font-family: var(--font-primary);
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.admin-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.admin-back-btn {
+  padding: 10px 20px;
+  background-color: var(--black);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition);
+}
+
+.admin-back-btn:hover {
+  background-color: var(--gray-600);
+}
+
+/* Tabs */
+.admin-tabs {
+  display: flex;
+  gap: 16px;
+  border-bottom: 1px solid var(--gray-200);
+  margin-bottom: 24px;
+}
+
+.admin-tab-btn {
+  padding: 12px 24px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray-400);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition);
+}
+
+.admin-tab-btn.active {
+  color: var(--black);
+  border-bottom-color: var(--black);
+}
+
+.tab-actions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.admin-add-prod-btn {
+  padding: 12px 24px;
+  background-color: var(--black);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition);
+}
+
+.admin-add-prod-btn:hover {
+  background-color: var(--gray-600);
+}
+
+/* Alert Boxes */
+.admin-alert {
+  padding: 12px 20px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 20px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.admin-alert-success {
+  background-color: #E8F5E9;
+  color: #2E7D32;
+  border: 1px solid #C8E6C9;
+}
+
+.admin-alert-error {
+  background-color: #FFEBEE;
+  color: #C62828;
+  border: 1px solid #FFCDD2;
+}
+
+/* Table Styling */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  background: var(--white);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.admin-table th, 
+.admin-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gray-200);
+  vertical-align: middle;
+}
+
+.admin-table th {
+  background-color: var(--off-white);
+  font-weight: 700;
+  color: var(--gray-600);
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+.table-thumbnail {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  background-color: var(--off-white);
+  padding: 4px;
+}
+
+/* Status Controls */
+.status-select {
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-200);
+  font-family: var(--font-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.status-pay-pending,
+.status-del-pending {
+  background-color: #FFF8E1;
+  color: #F57F17;
+  border-color: #FFE082;
+}
+
+.status-pay-paid,
+.status-del-delivered {
+  background-color: #E8F5E9;
+  color: #2E7D32;
+  border-color: #A5D6A7;
+}
+
+.status-pay-failed {
+  background-color: #FFEBEE;
+  color: #C62828;
+  border-color: #EF9A9A;
+}
+
+.status-del-shipped {
+  background-color: #E3F2FD;
+  color: #0D47A1;
+  border-color: #90CAF9;
+}
+
+/* Action Buttons */
+.action-btn-edit, 
+.action-btn-delete {
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 13px;
+  margin-right: 8px;
+  transition: opacity var(--transition);
+}
+
+.action-btn-edit {
+  background-color: #E0E0E0;
+  color: var(--black);
+}
+
+.action-btn-delete {
+  background-color: #FF3333;
+  color: var(--white);
+}
+
+.action-btn-edit:hover, 
+.action-btn-delete:hover {
+  opacity: 0.8;
+}
+
+/* Modal Styling */
+.admin-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.admin-modal {
+  background-color: var(--white);
+  width: 100%;
+  max-width: 600px;
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.admin-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.admin-modal-header h3 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--black);
+}
+
+.admin-modal-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--gray-400);
+}
+
+.admin-modal-close:hover {
+  color: var(--black);
+}
+
+.admin-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-modal-form textarea {
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  background-color: var(--off-white);
+  font-family: var(--font-primary);
+  font-size: 14px;
+  outline: none;
+  resize: vertical;
+}
+
+.admin-modal-form textarea:focus {
+  border-color: var(--black);
+}
+
+.admin-submit-btn {
+  padding: 14px;
+  background-color: var(--black);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: background-color var(--transition);
+}
+
+.admin-submit-btn:hover {
+  background-color: var(--gray-600);
+}

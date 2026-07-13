@@ -12,11 +12,17 @@ import Footer from './components/Footer'
 import CategoryPage from './components/CategoryPage'
 import ProductDetailPage from './components/ProductDetailPage'
 import CartPage from './components/CartPage'
+import PaymentSuccessPage from './components/PaymentSuccessPage'
+import AdminPage from './components/AdminPage'
 
-// Route: { page: 'home' | 'category' | 'product' | 'cart', category?, productId? }
+// Route: { page: 'home' | 'category' | 'product' | 'cart' | 'payment-success' | 'admin', category?, productId? }
 
 function App() {
   const [route, setRoute] = useState(() => {
+    // Check if redirecting from payment gateway success page
+    if (window.location.pathname === '/payment-success' || window.location.search.includes('gateway=')) {
+      return { page: 'payment-success' }
+    }
     // Initialize from localStorage
     const saved = localStorage.getItem('currentRoute')
     return saved ? JSON.parse(saved) : { page: 'home' }
@@ -32,6 +38,7 @@ function App() {
   const navigateCategory = (cat)      => { setRoute({ page: 'category', category: cat }); scroll() }
   const navigateProduct  = (id, cat)  => { setRoute({ page: 'product', productId: id, category: cat }); scroll() }
   const navigateCart     = ()         => { setRoute({ page: 'cart' }); scroll() }
+  const navigateAdmin    = ()         => { setRoute({ page: 'admin' }); scroll() }
 
   const sharedProps = {
     onLogoClick:        navigateHome,
@@ -40,6 +47,27 @@ function App() {
     onSaleClick:        () => navigateCategory('casual'),
     onNewArrivalsClick: () => navigateCategory('casual'),
     onProductClick:     navigateProduct,
+    onAdminClick:       navigateAdmin,
+  }
+
+  // ── Payment Success Page ──
+  if (route.page === 'payment-success') {
+    return (
+      <>
+        <AnnouncementBar />
+        <Navbar {...sharedProps} />
+        <PaymentSuccessPage onNavigateHome={navigateHome} />
+        <Newsletter />
+        <Footer />
+      </>
+    )
+  }
+
+  // ── Admin Page ──
+  if (route.page === 'admin') {
+    return (
+      <AdminPage onNavigateHome={navigateHome} />
+    )
   }
 
   // ── Cart Page ──
@@ -48,7 +76,7 @@ function App() {
       <>
         <AnnouncementBar />
         <Navbar {...sharedProps} />
-        <CartPage onNavigateHome={navigateHome} onCheckout={() => alert('Checkout coming soon!')} />
+        <CartPage onNavigateHome={navigateHome} />
         <Newsletter />
         <Footer />
       </>

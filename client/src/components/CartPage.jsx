@@ -1,20 +1,74 @@
 import React, { useState } from 'react'
 import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
 import './CartPage.css'
 
 const DISCOUNT_RATE = 0.20
 const DELIVERY_FEE = 15
 
-const CartPage = ({ onNavigateHome, onCheckout }) => {
+const CartPage = ({ onNavigateHome }) => {
   const { items, removeItem, updateQty, subtotal } = useCart()
+  const { user } = useAuth()
+  
   const [promoCode, setPromoCode] = useState('')
   const [promoApplied, setPromoApplied] = useState(false)
+  
+  // Checkout State
+  const [showCheckoutForm, setShowCheckoutForm] = useState(false)
+  const [address, setAddress] = useState('')
+  const [city, setCity] = useState('')
+  const [postalCode, setPostalCode] = useState('')
+  const [country, setCountry] = useState('Bangladesh')
+  const [paymentMethod, setPaymentMethod] = useState('stripe')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const discountAmount = Math.round(subtotal * DISCOUNT_RATE)
   const total = subtotal - discountAmount + DELIVERY_FEE
 
   const handleApplyPromo = () => {
     if (promoCode.trim()) setPromoApplied(true)
+  }
+
+  const handleProceedToPayment = async (e) => {
+    e.preventDefault()
+    if (!user) {
+      setError('Please login to checkout.')
+      return
+    }
+    if (!address || !city || !postalCode || !country) {
+      setError('Please fill in all shipping fields.')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      const res = await fetch('http://localhost:5000/api/payments/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          cartItems: items,
+          shippingAddress: { address, city, postalCode, country },
+          paymentMethod,
+        }),
+      })
+
+      const data = await res.json()
+      if (res.ok && data.url) {
+        window.location.href = data.url
+      } else {
+        setError(data.message || 'Checkout failed. Please try again.')
+      }
+    } catch (err) {
+      setError('Failed to reach backend server. Please check your connection.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -44,12 +98,10 @@ const CartPage = ({ onNavigateHome, onCheckout }) => {
               {items.map((item, idx) => (
                 <React.Fragment key={item.cartId}>
                   <div className="cart-item">
-                    {/* Product image */}
                     <div className="cart-item-img-wrap">
                       <img src={item.image} alt={item.name} className="cart-item-img" />
                     </div>
 
-                    {/* Product info */}
                     <div className="cart-item-info">
                       <div className="cart-item-top">
                         <h3 className="cart-item-name">{item.name}</h3>
@@ -68,7 +120,7 @@ const CartPage = ({ onNavigateHome, onCheckout }) => {
                       <p className="cart-item-meta">Color: {item.color}</p>
 
                       <div className="cart-item-bottom">
-                        <span className="cart-item-price">BDT{item.price * item.qty}</span>
+                        <span className="cart-item-price">BDT {item.price * item.qty}</span>
                         <div className="cart-item-qty">
                           <button
                             className="qty-btn"
@@ -90,62 +142,165 @@ const CartPage = ({ onNavigateHome, onCheckout }) => {
               ))}
             </div>
 
-            {/* ── Order Summary ── */}
-            <div className="order-summary">
-              <h2 className="order-summary-title">Order Summary</h2>
+            {/* ── Order Summary & Checkout Form ── */}
+            <div className="order-summary-container">
+              <div className="order-summary">
+                <h2 className="order-summary-title">Order Summary</h2>
 
-              <div className="order-summary-rows">
-                <div className="order-row">
-                  <span className="order-row-label">Subtotal</span>
-                  <span className="order-row-value">BDT{subtotal}</span>
+                <div className="order-summary-rows">
+                  <div className="order-row">
+                    <span className="order-row-label">Subtotal</span>
+                    <span className="order-row-value">BDT {subtotal}</span>
+                  </div>
+                  <div className="order-row">
+                    <span className="order-row-label">Discount (-20%)</span>
+                    <span className="order-row-value order-row-discount">BDT {-discountAmount}</span>
+                  </div>
+                  <div className="order-row">
+                    <span className="order-row-label">Delivery Fee</span>
+                    <span className="order-row-value">BDT {DELIVERY_FEE}</span>
+                  </div>
                 </div>
-                <div className="order-row">
-                  <span className="order-row-label">Discount (-20%)</span>
-                  <span className="order-row-value order-row-discount">BDT{-discountAmount}</span>
+
+                <hr className="order-divider" />
+
+                <div className="order-row order-total-row">
+                  <span className="order-total-label">Total</span>
+                  <span className="order-total-value">BDT {total}</span>
                 </div>
-                <div className="order-row">
-                  <span className="order-row-label">Delivery Fee</span>
-                  <span className="order-row-value">BDT{DELIVERY_FEE}</span>
+
+                {/* Promo code */}
+                <div className="promo-row">
+                  <div className="promo-input-wrap">
+                    <svg className="promo-icon" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      <line x1="7" y1="7" x2="7.01" y2="7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                    <input
+                      type="text"
+                      placeholder="Add promo code"
+                      className="promo-input"
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value)}
+                    />
+                  </div>
+                  <button className="promo-apply-btn" onClick={handleApplyPromo}>
+                    Apply
+                  </button>
                 </div>
+                {promoApplied && (
+                  <p className="promo-success">✓ Promo code applied!</p>
+                )}
+
+                {/* Initial Checkout Trigger */}
+                {!showCheckoutForm && (
+                  <button 
+                    className="checkout-btn" 
+                    onClick={() => {
+                      if (!user) {
+                        alert('Please login using the user icon in the header first.');
+                      } else {
+                        setShowCheckoutForm(true);
+                      }
+                    }}
+                  >
+                    Go to Checkout
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                )}
               </div>
 
-              <hr className="order-divider" />
+              {/* Checkout Form */}
+              {showCheckoutForm && (
+                <form className="checkout-shipping-form" onSubmit={handleProceedToPayment}>
+                  <h3 className="checkout-form-title">Shipping & Payment</h3>
+                  
+                  {error && <p className="checkout-error-msg">{error}</p>}
+                  
+                  <div className="form-group">
+                    <label htmlFor="address">Street Address</label>
+                    <input 
+                      id="address"
+                      type="text" 
+                      required 
+                      value={address} 
+                      onChange={e => setAddress(e.target.value)} 
+                      placeholder="House No, Road Name, Area"
+                    />
+                  </div>
 
-              <div className="order-row order-total-row">
-                <span className="order-total-label">Total</span>
-                <span className="order-total-value">BDT{total}</span>
-              </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="city">City</label>
+                      <input 
+                        id="city"
+                        type="text" 
+                        required 
+                        value={city} 
+                        onChange={e => setCity(e.target.value)} 
+                        placeholder="Dhaka"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="postcode">Postal Code</label>
+                      <input 
+                        id="postcode"
+                        type="text" 
+                        required 
+                        value={postalCode} 
+                        onChange={e => setPostalCode(e.target.value)} 
+                        placeholder="1212"
+                      />
+                    </div>
+                  </div>
 
-              {/* Promo code */}
-              <div className="promo-row">
-                <div className="promo-input-wrap">
-                  <svg className="promo-icon" width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                    <line x1="7" y1="7" x2="7.01" y2="7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                  <input
-                    type="text"
-                    placeholder="Add promo code"
-                    className="promo-input"
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
-                  />
-                </div>
-                <button className="promo-apply-btn" onClick={handleApplyPromo}>
-                  Apply
-                </button>
-              </div>
-              {promoApplied && (
-                <p className="promo-success">✓ Promo code applied!</p>
+                  <div className="form-group">
+                    <label htmlFor="country">Country</label>
+                    <input 
+                      id="country"
+                      type="text" 
+                      required 
+                      value={country} 
+                      onChange={e => setCountry(e.target.value)} 
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Select Payment Method</label>
+                    <div className="payment-options">
+                      <label className={`payment-option ${paymentMethod === 'stripe' ? 'active' : ''}`}>
+                        <input 
+                          type="radio" 
+                          name="paymentMethod" 
+                          value="stripe" 
+                          checked={paymentMethod === 'stripe'}
+                          onChange={() => setPaymentMethod('stripe')} 
+                        />
+                        <span>International (Stripe / Cards)</span>
+                      </label>
+                      <label className={`payment-option ${paymentMethod === 'sslcommerz' ? 'active' : ''}`}>
+                        <input 
+                          type="radio" 
+                          name="paymentMethod" 
+                          value="sslcommerz" 
+                          checked={paymentMethod === 'sslcommerz'}
+                          onChange={() => setPaymentMethod('sslcommerz')} 
+                        />
+                        <span>Local (Bkash, Nagad, Cards)</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <button className="proceed-payment-btn" type="submit" disabled={loading}>
+                    {loading ? 'Processing...' : 'Proceed to Payment'}
+                  </button>
+                  <button className="cancel-checkout-btn" type="button" onClick={() => setShowCheckoutForm(false)}>
+                    Cancel
+                  </button>
+                </form>
               )}
-
-              {/* Checkout button */}
-              <button className="checkout-btn" onClick={onCheckout}>
-                Go to Checkout
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
             </div>
 
           </div>

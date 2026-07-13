@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { getAllProductsFlat } from '../data/productsData'
+import { fetchProducts } from '../services/productService'
 import './SearchModal.css'
 
 const RECENT_KEY = 'shopco_recent_searches'
@@ -26,7 +26,6 @@ const SearchModal = ({ isOpen, onClose, onProductClick, onCategoryClick }) => {
   const inputRef    = useRef(null)
   const listRef     = useRef(null)
   const overlayRef  = useRef(null)
-  const allProds    = useRef(getAllProductsFlat())
 
   const categories = [
     { label: 'Casual',  slug: 'casual',  emoji: '👕' },
@@ -49,19 +48,19 @@ const SearchModal = ({ isOpen, onClose, onProductClick, onCategoryClick }) => {
     return () => { document.body.style.overflow = '' }
   }, [isOpen])
 
-  // Live search
+  // Live search with debounce
   useEffect(() => {
-    const q = query.trim().toLowerCase()
+    const q = query.trim()
     if (!q) { setResults([]); setFocused(-1); return }
 
-    const matched = allProds.current.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.category.toLowerCase().includes(q) ||
-      p.description?.toLowerCase().includes(q)
-    ).slice(0, MAX_RESULTS)
+    const delayDebounceFn = setTimeout(() => {
+      fetchProducts({ search: q }).then(data => {
+        setResults(data.slice(0, MAX_RESULTS))
+        setFocused(-1)
+      })
+    }, 300)
 
-    setResults(matched)
-    setFocused(-1)
+    return () => clearTimeout(delayDebounceFn)
   }, [query])
 
   // Keyboard navigation

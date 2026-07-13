@@ -209,8 +209,6 @@
   border-radius: var(--radius-xl);
   padding: 24px;
   background: var(--white);
-  position: sticky;
-  top: 88px;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -385,6 +383,10 @@
     gap: 16px;
   }
 
+  .order-summary-container {
+    position: static;
+  }
+
   .order-summary {
     position: static;
   }
@@ -439,3 +441,139 @@
     padding: 12px 18px;
   }
 }
+
+/* ── Order Summary Container (stacking summary and form) ── */
+.order-summary-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 88px;
+}
+
+/* ── Checkout Shipping Form ── */
+.checkout-shipping-form {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.checkout-form-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 4px;
+}
+
+.checkout-error-msg {
+  color: var(--red);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--gray-500);
+}
+
+.form-group input {
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  font-family: var(--font-primary);
+  font-size: 14px;
+  outline: none;
+  background-color: var(--off-white);
+}
+
+.form-group input:focus {
+  border-color: var(--black);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Payment Gateway Selector */
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.payment-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all var(--transition);
+}
+
+.payment-option.active {
+  border-color: var(--black);
+  background-color: var(--off-white);
+}
+
+.payment-option input {
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Proceed & Cancel Buttons */
+.proceed-payment-btn {
+  padding: 14px;
+  background-color: var(--black);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background-color var(--transition);
+}
+
+.proceed-payment-btn:hover:not(:disabled) {
+  background-color: var(--gray-600);
+}
+
+.proceed-payment-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancel-checkout-btn {
+  padding: 10px;
+  background: none;
+  border: none;
+  color: var(--gray-500);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.cancel-checkout-btn:hover {
+  color: var(--black);
+}
+

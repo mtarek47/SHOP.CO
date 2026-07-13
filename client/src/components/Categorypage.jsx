@@ -1,25 +1,91 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import ProductCard from './ProductCard'
 import FilterSidebar from './FilterSidebar'
-import { allProducts } from '../data/productsData'
+import { fetchProducts } from '../services/productService'
 import './CategoryPage.css'
 
 const PRODUCTS_PER_PAGE = 9
-const TOTAL_PRODUCTS = 100
 const sortOptions = ['Most Popular', 'Newest', 'Price: Low to High', 'Price: High to Low']
 
 const CategoryPage = ({ category, onNavigateHome, onProductClick }) => {
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [sortBy, setSortBy] = useState('Most Popular')
   const [sortOpen, setSortOpen] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
+  
+  // Set up filters
   const [filters, setFilters] = useState({
-    priceMin: 50, priceMax: 200, colors: ['blue'], size: 'Large', dressStyle: category,
+    priceMin: 50,
+    priceMax: 500,
+    colors: [],
+    size: '',
+    dressStyle: category,
   })
 
-  const products = allProducts[category] || allProducts.casual
+  // Map client-side Sort options to backend sort keys
+  const getBackendSortKey = (sortValue) => {
+    switch (sortValue) {
+      case 'Most Popular': return 'rating';
+      case 'Newest': return 'newest';
+      case 'Price: Low to High': return 'price-asc';
+      case 'Price: High to Low': return 'price-desc';
+      default: return 'rating';
+    }
+  }
+
+  // Load products whenever category, filters, or sortBy changes
+  useEffect(() => {
+    setLoading(true)
+    
+    // Convert client colors array to backend parameters
+    // In our client, color options have ID names: 'green', 'red', 'yellow' etc. 
+    // We map them if needed or send color IDs. Let's send color IDs, backend supports check in array
+    const queryFilters = {
+      category: category,
+      minPrice: filters.priceMin,
+      maxPrice: filters.priceMax,
+      sort: getBackendSortKey(sortBy)
+    }
+
+    if (filters.colors && filters.colors.length > 0) {
+      // Map color name IDs to hex hashes to match the DB seed if needed, 
+      // or send color names. Let's map color names to their respective hex values:
+      const colorMap = {
+        green: '#00C12B',
+        red: '#F44336',
+        yellow: '#F3D060',
+        orange: '#FF7E22',
+        teal: '#31BABD',
+        blue: '#4F4FF1',
+        purple: '#BE52F2',
+        pink: '#EB52F2',
+        white: '#FFFFFF',
+        black: '#3E3E3E'
+      }
+      const hexColors = filters.colors.map(col => colorMap[col] || col)
+      queryFilters.colors = hexColors.join(',')
+    }
+
+    if (filters.size) {
+      queryFilters.sizes = filters.size
+    }
+
+    fetchProducts(queryFilters).then(data => {
+      setProducts(data)
+      setCurrentPage(1) // Reset page to 1 on filter/sort change
+      setLoading(false)
+    })
+  }, [category, filters, sortBy])
+
   const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1)
-  const totalPages = Math.ceil(TOTAL_PRODUCTS / PRODUCTS_PER_PAGE)
+  
+  // Client-side pagination based on dynamic database length
+  const totalProducts = products.length
+  const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE) || 1
+  const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE
+  const paginatedProducts = products.slice(startIndex, startIndex + PRODUCTS_PER_PAGE)
 
   const handlePageChange = (page) => {
     setCurrentPage(page)
@@ -68,7 +134,9 @@ const CategoryPage = ({ category, onNavigateHome, onProductClick }) => {
               </div>
               <div className="category-header-right">
                 <span className="category-count">
-                  Showing {(currentPage - 1) * PRODUCTS_PER_PAGE + 1}-{Math.min(currentPage * PRODUCTS_PER_PAGE, TOTAL_PRODUCTS)} of {TOTAL_PRODUCTS} Products
+                  {totalProducts > 0 
+                    ? `Showing ${startIndex + 1}-${Math.min(currentPage * PRODUCTS_PER_PAGE, totalProducts)} of ${totalProducts} Products` 
+                    : 'No Products Found'}
                 </span>
                 <div className="sort-wrap">
                   <span className="sort-label">Sort by: </span>
@@ -90,34 +158,42 @@ const CategoryPage = ({ category, onNavigateHome, onProductClick }) => {
               </div>
             </div>
 
-            <div className="category-grid">
-              {products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onClick={() => onProductClick && onProductClick(product.id)}
-                />
-              ))}
-            </div>
-
-            <div className="pagination">
-              <button className="pagination-btn" disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>
-                ← Previous
-              </button>
-              <div className="pagination-pages">
-                {getPageNumbers().map((page, idx) =>
-                  page === '...' ? (
-                    <span key={`e-${idx}`} className="pagination-ellipsis">...</span>
-                  ) : (
-                    <button key={page} className={`pagination-page ${currentPage === page ? 'pagination-page--active' : ''}`}
-                      onClick={() => handlePageChange(page)}>{page}</button>
-                  )
-                )}
+            {loading ? (
+              <div className="category-loading" style={{ padding: '40px 0', textWeight: 'bold', textAlign: 'center' }}>
+                Loading products...
               </div>
-              <button className="pagination-btn" disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)}>
-                Next →
-              </button>
-            </div>
+            ) : (
+              <div className="category-grid">
+                {paginatedProducts.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onClick={() => onProductClick && onProductClick(product.id)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {totalProducts > PRODUCTS_PER_PAGE && (
+              <div className="pagination">
+                <button className="pagination-btn" disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>
+                  ← Previous
+                </button>
+                <div className="pagination-pages">
+                  {getPageNumbers().map((page, idx) =>
+                    page === '...' ? (
+                      <span key={`e-${idx}`} className="pagination-ellipsis">...</span>
+                    ) : (
+                      <button key={page} className={`pagination-page ${currentPage === page ? 'pagination-page--active' : ''}`}
+                        onClick={() => handlePageChange(page)}>{page}</button>
+                    )
+                  )}
+                </div>
+                <button className="pagination-btn" disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)}>
+                  Next →
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

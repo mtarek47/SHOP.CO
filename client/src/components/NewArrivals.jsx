@@ -1,10 +1,16 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import ProductCard from './ProductCard'
-import { allProducts } from '../data/productsData'
+import { fetchProducts } from '../services/productService'
 import './Section.css'
 
 const NewArrivals = ({ onProductClick }) => {
-  const products = allProducts.casual.slice(0, 4)
+  const [products, setProducts] = useState([])
+
+  useEffect(() => {
+    fetchProducts({ category: 'casual' }).then(data => {
+      setProducts(data.slice(0, 4))
+    })
+  }, [])
 
   return (
     <section className="section" id="new-arrivals">

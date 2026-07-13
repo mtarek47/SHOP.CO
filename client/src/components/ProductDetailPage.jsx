@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import ProductCard from './ProductCard'
-import { getProductById, getRelatedProducts } from '../data/productsData'
+import { fetchProductById, fetchRelatedProducts } from '../services/productService'
 import { useCart } from '../context/CartContext'
 import './ProductDetailPage.css'
 
@@ -24,12 +24,13 @@ const StarRating = ({ rating, size = 16 }) => (
 const tabs = ['Product Details', 'Rating & Reviews', 'FAQs']
 
 const ProductDetailPage = ({ productId, onNavigateHome, onProductClick, onCategoryClick }) => {
-  const product = getProductById(productId)
-  const related = getRelatedProducts(productId, 4)
+  const [product, setProduct] = useState(null)
+  const [related, setRelated] = useState([])
+  const [loading, setLoading] = useState(true)
 
   const [activeImg, setActiveImg] = useState(0)
   const [selectedColor, setSelectedColor] = useState(0)
-  const [selectedSize, setSelectedSize] = useState(product?.sizes?.[2] || 'Large')
+  const [selectedSize, setSelectedSize] = useState('Large')
   const [qty, setQty] = useState(1)
   const [activeTab, setActiveTab] = useState('Rating & Reviews')
   const [reviewSort, setReviewSort] = useState('Latest')
@@ -38,8 +39,39 @@ const ProductDetailPage = ({ productId, onNavigateHome, onProductClick, onCatego
   const { addToCart } = useCart()
   const [added, setAdded] = useState(false)
 
+  // Fetch product data
+  useEffect(() => {
+    setLoading(true)
+    fetchProductById(productId).then((data) => {
+      if (data) {
+        setProduct(data)
+        setActiveImg(0)
+        setSelectedColor(0)
+        setSelectedSize(data.sizes?.[0] || 'Medium')
+        
+        // Fetch related products
+        fetchRelatedProducts(data.category, data.id).then((rel) => {
+          setRelated(rel)
+        })
+      }
+      setLoading(false)
+    })
+  }, [productId])
+
+  if (loading) {
+    return (
+      <div className="container" style={{ padding: '80px 0', textAlign: 'center', fontWeight: 'bold' }}>
+        Loading product details...
+      </div>
+    )
+  }
+
   if (!product) {
-    return <div className="container" style={{ padding: '64px 0' }}>Product not found.</div>
+    return (
+      <div className="container" style={{ padding: '80px 0', textAlign: 'center' }}>
+        Product not found.
+      </div>
+    )
   }
 
   const categoryLabel = product.category.charAt(0).toUpperCase() + product.category.slice(1)
@@ -54,9 +86,9 @@ const ProductDetailPage = ({ productId, onNavigateHome, onProductClick, onCatego
           <span className="breadcrumb-sep">›</span>
           <a href="#" className="breadcrumb-link" onClick={(e) => { e.preventDefault(); onNavigateHome() }}>Shop</a>
           <span className="breadcrumb-sep">›</span>
-          <a href="#" className="breadcrumb-link" onClick={(e) => { e.preventDefault(); onCategoryClick(product.category) }}>Men</a>
+          <a href="#" className="breadcrumb-link" onClick={(e) => { e.preventDefault(); onCategoryClick(product.category) }}>{categoryLabel}</a>
           <span className="breadcrumb-sep">›</span>
-          <span className="breadcrumb-current">{categoryLabel}</span>
+          <span className="breadcrumb-current">{product.name}</span>
         </nav>
 
         {/* ── Product Top Section ── */}
@@ -66,20 +98,30 @@ const ProductDetailPage = ({ productId, onNavigateHome, onProductClick, onCatego
           <div className="pdp-gallery">
             {/* Thumbnails - desktop left, mobile bottom */}
             <div className="pdp-thumbs">
-              {product.images.map((img, i) => (
-                <button
-                  key={i}
-                  className={`pdp-thumb ${activeImg === i ? 'pdp-thumb--active' : ''}`}
-                  onClick={() => setActiveImg(i)}
-                >
-                  <img src={img} alt={`View ${i + 1}`} />
+              {product.images && product.images.length > 0 ? (
+                product.images.map((img, i) => (
+                  <button
+                    key={i}
+                    className={`pdp-thumb ${activeImg === i ? 'pdp-thumb--active' : ''}`}
+                    onClick={() => setActiveImg(i)}
+                  >
+                    <img src={img} alt={`View ${i + 1}`} />
+                  </button>
+                ))
+              ) : (
+                <button className="pdp-thumb pdp-thumb--active">
+                  <img src={product.image} alt={product.name} />
                 </button>
-              ))}
+              )}
             </div>
 
             {/* Main image */}
             <div className="pdp-main-img-wrap">
-              <img src={product.images[activeImg]} alt={product.name} className="pdp-main-img" />
+              <img 
+                src={product.images && product.images.length > 0 ? product.images[activeImg] : product.image} 
+                alt={product.name} 
+                className="pdp-main-img" 
+              />
             </div>
           </div>
 
@@ -107,46 +149,50 @@ const ProductDetailPage = ({ productId, onNavigateHome, onProductClick, onCatego
             <hr className="pdp-divider" />
 
             {/* Color selector */}
-            <div className="pdp-option-section">
-              <p className="pdp-option-label">Select Colors</p>
-              <div className="pdp-colors">
-                {product.colors.map((hex, i) => (
-                  <button
-                    key={i}
-                    className={`pdp-color-swatch ${selectedColor === i ? 'pdp-color-swatch--active' : ''}`}
-                    style={{ backgroundColor: hex.startsWith('#') ? hex : '#CCA300' }}
-                    onClick={() => setSelectedColor(i)}
-                    aria-label={`Color ${i + 1}`}
-                  >
-                    {selectedColor === i && (
-                      <svg width="14" height="14" viewBox="0 0 12 12" fill="none">
-                        <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    )}
-                  </button>
-                ))}
+            {product.colors && product.colors.length > 0 && (
+              <div className="pdp-option-section">
+                <p className="pdp-option-label">Select Colors</p>
+                <div className="pdp-colors">
+                  {product.colors.map((hex, i) => (
+                    <button
+                      key={i}
+                      className={`pdp-color-swatch ${selectedColor === i ? 'pdp-color-swatch--active' : ''}`}
+                      style={{ backgroundColor: hex.startsWith('#') ? hex : '#CCA300' }}
+                      onClick={() => setSelectedColor(i)}
+                      aria-label={`Color ${i + 1}`}
+                    >
+                      {selectedColor === i && (
+                        <svg width="14" height="14" viewBox="0 0 12 12" fill="none">
+                          <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            <hr className="pdp-divider" />
+            {product.colors && product.colors.length > 0 && <hr className="pdp-divider" />}
 
             {/* Size selector */}
-            <div className="pdp-option-section">
-              <p className="pdp-option-label">Choose Size</p>
-              <div className="pdp-sizes">
-                {product.sizes.map((size) => (
-                  <button
-                    key={size}
-                    className={`pdp-size-chip ${selectedSize === size ? 'pdp-size-chip--active' : ''}`}
-                    onClick={() => setSelectedSize(size)}
-                  >
-                    {size}
-                  </button>
-                ))}
+            {product.sizes && product.sizes.length > 0 && (
+              <div className="pdp-option-section">
+                <p className="pdp-option-label">Choose Size</p>
+                <div className="pdp-sizes">
+                  {product.sizes.map((size) => (
+                    <button
+                      key={size}
+                      className={`pdp-size-chip ${selectedSize === size ? 'pdp-size-chip--active' : ''}`}
+                      onClick={() => setSelectedSize(size)}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            <hr className="pdp-divider" />
+            {product.sizes && product.sizes.length > 0 && <hr className="pdp-divider" />}
 
             {/* Qty + Add to Cart */}
             <div className="pdp-actions">
@@ -164,7 +210,8 @@ const ProductDetailPage = ({ productId, onNavigateHome, onProductClick, onCatego
                 >+</button>
               </div>
               <button className="pdp-add-btn" onClick={() => {
-                addToCart(product, selectedSize, product.colors[selectedColor], `Color ${selectedColor + 1}`)
+                const colorHex = product.colors?.[selectedColor] || '#000000';
+                addToCart(product, selectedSize, colorHex, `Color ${selectedColor + 1}`)
                 setAdded(true)
                 setTimeout(() => setAdded(false), 2000)
               }}>
@@ -245,6 +292,7 @@ const ProductDetailPage = ({ productId, onNavigateHome, onProductClick, onCatego
           </div>
         )}
 
+        {/* ── Product Details Tab ── */}
         {activeTab === 'Product Details' && (
           <div className="pdp-tab-content">
             <p>{product.description}</p>
@@ -257,6 +305,7 @@ const ProductDetailPage = ({ productId, onNavigateHome, onProductClick, onCatego
           </div>
         )}
 
+        {/* ── FAQs Tab ── */}
         {activeTab === 'FAQs' && (
           <div className="pdp-tab-content">
             <div className="faq-item">
@@ -275,18 +324,20 @@ const ProductDetailPage = ({ productId, onNavigateHome, onProductClick, onCatego
         )}
 
         {/* ── You Might Also Like ── */}
-        <section className="pdp-related">
-          <h2 className="pdp-related-title">YOU MIGHT ALSO LIKE</h2>
-          <div className="pdp-related-grid">
-            {related.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                onClick={() => onProductClick(p.id)}
-              />
-            ))}
-          </div>
-        </section>
+        {related.length > 0 && (
+          <section className="pdp-related">
+            <h2 className="pdp-related-title">YOU MIGHT ALSO LIKE</h2>
+            <div className="pdp-related-grid">
+              {related.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  onClick={() => onProductClick(p.id)}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
       </div>
     </div>
