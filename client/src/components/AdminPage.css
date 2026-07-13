@@ -318,3 +318,60 @@
 .admin-submit-btn:hover {
   background-color: var(--gray-600);
 }
+
+/* ── Landing Page Settings Tab ── */
+.admin-settings-form {
+  max-width: 600px;
+  background-color: var(--white);
+  padding: 28px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--gray-200);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-settings-input,
+.admin-settings-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  font-family: var(--font-primary);
+  font-size: 14px;
+  outline: none;
+  background-color: var(--off-white);
+}
+
+.admin-settings-textarea {
+  resize: vertical;
+}
+
+.admin-settings-input:focus,
+.admin-settings-textarea:focus {
+  border-color: var(--black);
+}
+
+.admin-save-btn {
+  padding: 14px;
+  background-color: var(--black);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--font-primary);
+  cursor: pointer;
+  margin-top: 16px;
+  transition: background-color var(--transition);
+}
+
+.admin-save-btn:hover:not(:disabled) {
+  background-color: var(--gray-600);
+}
+
+.admin-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

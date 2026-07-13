@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import './AdminPage.css'
 
 const AdminPage = ({ onNavigateHome }) => {
-  const [activeTab, setActiveTab] = useState('products') // 'products' | 'orders'
+  const [activeTab, setActiveTab] = useState('products') // 'products' | 'orders' | 'settings'
   const [products, setProducts] = useState([])
   const [orders, setOrders] = useState([])
   
@@ -25,11 +25,24 @@ const AdminPage = ({ onNavigateHome }) => {
   const [prodColors, setProdColors] = useState('')
   const [prodSizes, setProdSizes] = useState('')
 
+  // Hero Section Settings States
+  const [heroTitle, setHeroTitle] = useState('')
+  const [heroDesc, setHeroDesc] = useState('')
+  const [heroImgUrl, setHeroImgUrl] = useState('')
+  const [stat1Num, setStat1Num] = useState('')
+  const [stat1Label, setStat1Label] = useState('')
+  const [stat2Num, setStat2Num] = useState('')
+  const [stat2Label, setStat2Label] = useState('')
+  const [stat3Num, setStat3Num] = useState('')
+  const [stat3Label, setStat3Label] = useState('')
+  const [savingSettings, setSavingSettings] = useState(false)
+
   const API_URL = 'http://localhost:5000/api'
 
   useEffect(() => {
     loadProducts()
     loadOrders()
+    loadHeroSettings()
   }, [])
 
   const loadProducts = async () => {
@@ -50,18 +63,43 @@ const AdminPage = ({ onNavigateHome }) => {
   const loadOrders = async () => {
     setLoadingOrders(true)
     try {
-      const res = await fetch(`${API_URL}/admin/orders`, { credentials: 'include' })
-      const data = await res.json()
+      const res = await fetch(`${API_URL}/admin/orders`, {
+        credentials: 'include'
+      })
       if (res.ok) {
+        const data = await res.json()
         setOrders(data)
-      } else {
-        setErrorMsg(data.message || 'Unauthorized: Admin role required')
       }
     } catch (err) {
       console.error(err)
-      setErrorMsg('Failed to load orders from backend server.')
     } finally {
       setLoadingOrders(false)
+    }
+  }
+
+  const loadHeroSettings = async () => {
+    try {
+      const res = await fetch(`${API_URL}/config/hero`)
+      if (res.ok) {
+        const data = await res.json()
+        setHeroTitle(data.title || '')
+        setHeroDesc(data.description || '')
+        setHeroImgUrl(data.imageUrl || '')
+        if (data.stats && data.stats[0]) {
+          setStat1Num(data.stats[0].num || '')
+          setStat1Label(data.stats[0].label || '')
+        }
+        if (data.stats && data.stats[1]) {
+          setStat2Num(data.stats[1].num || '')
+          setStat2Label(data.stats[1].label || '')
+        }
+        if (data.stats && data.stats[2]) {
+          setStat3Num(data.stats[2].num || '')
+          setStat3Label(data.stats[2].label || '')
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load settings:', err)
     }
   }
 
@@ -74,8 +112,10 @@ const AdminPage = ({ onNavigateHome }) => {
     setProdImage('')
     setProdCategory('casual')
     setProdDesc('')
-    setProdColors('#000000,#FFFFFF')
-    setProdSizes('Small,Medium,Large,X-Large')
+    setProdColors('')
+    setProdSizes('')
+    setErrorMsg('')
+    setSuccessMsg('')
     setShowProductModal(true)
   }
 
@@ -84,12 +124,14 @@ const AdminPage = ({ onNavigateHome }) => {
     setProdName(p.name)
     setProdPrice(p.price)
     setProdOriginalPrice(p.originalPrice || '')
-    setProdDiscount(p.discount || 0)
+    setProdDiscount(p.discount || '')
     setProdImage(p.image)
     setProdCategory(p.category)
     setProdDesc(p.description)
     setProdColors(p.colors ? p.colors.join(',') : '')
     setProdSizes(p.sizes ? p.sizes.join(',') : '')
+    setErrorMsg('')
+    setSuccessMsg('')
     setShowProductModal(true)
   }
 
@@ -102,22 +144,22 @@ const AdminPage = ({ onNavigateHome }) => {
       name: prodName,
       price: Number(prodPrice),
       originalPrice: prodOriginalPrice ? Number(prodOriginalPrice) : undefined,
-      discount: prodDiscount ? Number(prodDiscount) : 0,
+      discount: prodDiscount ? Number(prodDiscount) : undefined,
       image: prodImage,
       category: prodCategory,
       description: prodDesc,
-      colors: prodColors.split(',').map(c => c.trim()).filter(Boolean),
-      sizes: prodSizes.split(',').map(s => s.trim()).filter(Boolean)
+      colors: prodColors ? prodColors.split(',').map(s => s.trim()) : [],
+      sizes: prodSizes ? prodSizes.split(',').map(s => s.trim()) : [],
     }
 
     try {
-      const method = editingProduct ? 'PUT' : 'POST'
       const url = editingProduct 
-        ? `${API_URL}/admin/products/${editingProduct._id}` 
+        ? `${API_URL}/admin/products/${editingProduct._id}`
         : `${API_URL}/admin/products`
+      const method = editingProduct ? 'PUT' : 'POST'
 
       const res = await fetch(url, {
-        method,
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(payload)
@@ -125,24 +167,24 @@ const AdminPage = ({ onNavigateHome }) => {
 
       const data = await res.json()
       if (res.ok) {
-        setSuccessMsg(editingProduct ? 'Product updated!' : 'Product added!')
+        setSuccessMsg(editingProduct ? 'Product updated successfully' : 'Product created successfully')
         setShowProductModal(false)
         loadProducts()
       } else {
-        setErrorMsg(data.message || 'Operation failed')
+        setErrorMsg(data.message || 'Product save failed')
       }
     } catch (err) {
-      setErrorMsg('Failed to connect to backend server.')
+      console.error(err)
+      setErrorMsg('Failed to connect to server.')
     }
   }
 
-  const handleDeleteProduct = async (id) => {
+  const handleDeleteProduct = async (prodId) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return
     setErrorMsg('')
     setSuccessMsg('')
-
     try {
-      const res = await fetch(`${API_URL}/admin/products/${id}`, {
+      const res = await fetch(`${API_URL}/admin/products/${prodId}`, {
         method: 'DELETE',
         credentials: 'include'
       })
@@ -203,6 +245,41 @@ const AdminPage = ({ onNavigateHome }) => {
     }
   }
 
+  const handleSettingsSubmit = async (e) => {
+    e.preventDefault()
+    setSavingSettings(true)
+    setErrorMsg('')
+    setSuccessMsg('')
+    try {
+      const res = await fetch(`${API_URL}/config/hero`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: heroTitle,
+          description: heroDesc,
+          imageUrl: heroImgUrl,
+          stats: [
+            { num: stat1Num, label: stat1Label },
+            { num: stat2Num, label: stat2Label },
+            { num: stat3Num, label: stat3Label }
+          ]
+        })
+      })
+      if (res.ok) {
+        setSuccessMsg('Hero settings saved successfully!')
+      } else {
+        const data = await res.json()
+        setErrorMsg(data.message || 'Failed to save settings')
+      }
+    } catch (err) {
+      console.error(err)
+      setErrorMsg('Failed to connect to server.')
+    } finally {
+      setSavingSettings(false)
+    }
+  }
+
   return (
     <div className="admin-page container">
       <div className="admin-header">
@@ -216,15 +293,21 @@ const AdminPage = ({ onNavigateHome }) => {
       <div className="admin-tabs">
         <button 
           className={`admin-tab-btn ${activeTab === 'products' ? 'active' : ''}`}
-          onClick={() => setActiveTab('products')}
+          onClick={() => { setActiveTab('products'); setErrorMsg(''); setSuccessMsg('') }}
         >
           Manage Products
         </button>
         <button 
           className={`admin-tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
-          onClick={() => setActiveTab('orders')}
+          onClick={() => { setActiveTab('orders'); setErrorMsg(''); setSuccessMsg('') }}
         >
           Fulfill Orders ({orders.length})
+        </button>
+        <button 
+          className={`admin-tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
+          onClick={() => { setActiveTab('settings'); setErrorMsg(''); setSuccessMsg(''); loadHeroSettings() }}
+        >
+          Landing Page Settings
         </button>
       </div>
 
@@ -245,9 +328,8 @@ const AdminPage = ({ onNavigateHome }) => {
                   <tr>
                     <th>Image</th>
                     <th>Name</th>
-                    <th>Category</th>
                     <th>Price</th>
-                    <th>Discount</th>
+                    <th>Category</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -255,15 +337,16 @@ const AdminPage = ({ onNavigateHome }) => {
                   {products.map(p => (
                     <tr key={p._id}>
                       <td>
-                        <img src={p.image} alt={p.name} className="table-thumbnail" />
+                        <img src={p.image} alt={p.name} className="admin-prod-thumb" />
                       </td>
                       <td style={{ fontWeight: '600' }}>{p.name}</td>
+                      <td>BDT {p.price} {p.originalPrice && <span style={{ textDecoration: 'line-through', color: 'var(--gray-400)', fontSize: '12px', marginLeft: '6px' }}>BDT {p.originalPrice}</span>}</td>
                       <td style={{ textTransform: 'capitalize' }}>{p.category}</td>
-                      <td>BDT {p.price}</td>
-                      <td>{p.discount}%</td>
                       <td>
-                        <button onClick={() => openEditModal(p)} className="action-btn-edit">Edit</button>
-                        <button onClick={() => handleDeleteProduct(p._id)} className="action-btn-delete">Delete</button>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button onClick={() => openEditModal(p)} className="action-btn-edit">Edit</button>
+                          <button onClick={() => handleDeleteProduct(p._id)} className="action-btn-delete">Delete</button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -345,6 +428,94 @@ const AdminPage = ({ onNavigateHome }) => {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── SETTINGS TAB ── */}
+      {activeTab === 'settings' && (
+        <div className="admin-tab-content">
+          <div className="tab-actions-header">
+            <h2>Landing Page Settings (Hero Section)</h2>
+          </div>
+          
+          <form onSubmit={handleSettingsSubmit} className="admin-settings-form">
+            <div className="form-group">
+              <label>Hero Title (Use \n or hit Enter for line breaks)</label>
+              <textarea 
+                required
+                rows="3"
+                value={heroTitle}
+                onChange={e => setHeroTitle(e.target.value)}
+                placeholder="e.g. FIND CLOTHES THAT MATCHES YOUR STYLE"
+                className="admin-settings-textarea"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label>Hero Description</label>
+              <textarea 
+                required
+                rows="4"
+                value={heroDesc}
+                onChange={e => setHeroDesc(e.target.value)}
+                placeholder="e.g. Browse through our diverse range..."
+                className="admin-settings-textarea"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Hero Image Path or Web URL</label>
+              <input 
+                type="text"
+                required
+                value={heroImgUrl}
+                onChange={e => setHeroImgUrl(e.target.value)}
+                placeholder="e.g. /src/assets/hero-image.png or a web URL"
+                className="admin-settings-input"
+              />
+            </div>
+            
+            <h3 className="settings-sub-title" style={{ marginTop: '24px', marginBottom: '12px', fontFamily: 'var(--font-display)', fontWeight: '700' }}>Hero Stats Counters</h3>
+            
+            <div className="stats-settings-grid" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+              <div className="stat-setting-item" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px', padding: '16px', backgroundColor: 'var(--off-white)', borderRadius: 'var(--radius-lg)' }}>
+                <div className="form-group">
+                  <label>Stat 1 Number</label>
+                  <input type="text" required value={stat1Num} onChange={e => setStat1Num(e.target.value)} placeholder="200+" className="admin-settings-input" />
+                </div>
+                <div className="form-group">
+                  <label>Stat 1 Label</label>
+                  <input type="text" required value={stat1Label} onChange={e => setStat1Label(e.target.value)} placeholder="Brands" className="admin-settings-input" />
+                </div>
+              </div>
+              
+              <div className="stat-setting-item" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px', padding: '16px', backgroundColor: 'var(--off-white)', borderRadius: 'var(--radius-lg)' }}>
+                <div className="form-group">
+                  <label>Stat 2 Number</label>
+                  <input type="text" required value={stat2Num} onChange={e => setStat2Num(e.target.value)} placeholder="2,000+" className="admin-settings-input" />
+                </div>
+                <div className="form-group">
+                  <label>Stat 2 Label</label>
+                  <input type="text" required value={stat2Label} onChange={e => setStat2Label(e.target.value)} placeholder="Products" className="admin-settings-input" />
+                </div>
+              </div>
+              
+              <div className="stat-setting-item" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px', padding: '16px', backgroundColor: 'var(--off-white)', borderRadius: 'var(--radius-lg)' }}>
+                <div className="form-group">
+                  <label>Stat 3 Number</label>
+                  <input type="text" required value={stat3Num} onChange={e => setStat3Num(e.target.value)} placeholder="30,000+" className="admin-settings-input" />
+                </div>
+                <div className="form-group">
+                  <label>Stat 3 Label</label>
+                  <input type="text" required value={stat3Label} onChange={e => setStat3Label(e.target.value)} placeholder="Customers" className="admin-settings-input" />
+                </div>
+              </div>
+            </div>
+            
+            <button className="admin-save-btn" type="submit" disabled={savingSettings}>
+              {savingSettings ? 'Saving...' : 'Save settings'}
+            </button>
+          </form>
         </div>
       )}
 
