@@ -68,7 +68,19 @@ const FilterSidebar = ({ filters, setFilters, category, isMobile = false, onAppl
   }
 
   const setSize = (size) => {
-    setFilters((prev) => ({ ...prev, size }))
+    setFilters((prev) => ({ ...prev, size: prev.size === size ? '' : size }))
+  }
+
+  const handleReset = () => {
+    setLocalPriceMin(50)
+    setLocalPriceMax(500)
+    setFilters({
+      priceMin: 50,
+      priceMax: 500,
+      colors: [],
+      size: '',
+      dressStyle: category,
+    })
   }
 
   const handleApply = () => {
@@ -80,7 +92,7 @@ const FilterSidebar = ({ filters, setFilters, category, isMobile = false, onAppl
     <div className={`filter-sidebar ${isMobile ? 'filter-sidebar--mobile' : ''}`}>
       <div className="filter-sidebar-top">
         <span className="filter-sidebar-heading">Filters</span>
-        <button className="filter-sidebar-reset" aria-label="Adjust filters">
+        <button className="filter-sidebar-reset" aria-label="Reset filters" onClick={handleReset} title="Reset all filters">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <rect x="2" y="4" width="14" height="1.5" rx="0.75" fill="currentColor"/>
             <rect x="2" y="8.25" width="14" height="1.5" rx="0.75" fill="currentColor"/>

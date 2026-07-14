@@ -3,7 +3,7 @@ import ProductCard from './ProductCard'
 import { fetchProducts } from '../services/productService'
 import './Section.css'
 
-const TopSelling = ({ onProductClick }) => {
+const TopSelling = ({ onProductClick, onViewAll }) => {
   const [products, setProducts] = useState([])
 
   useEffect(() => {
@@ -28,7 +28,7 @@ const TopSelling = ({ onProductClick }) => {
             ))}
           </div>
           <div className="section-view-all">
-            <a href="#" className="btn-view-all">View All</a>
+            <button className="btn-view-all" onClick={(e) => { e.preventDefault(); onViewAll && onViewAll(); }}>View All</button>
           </div>
         </div>
       </section>

@@ -45,6 +45,10 @@ const AdminPage = ({ onNavigateHome }) => {
   const [stat2Label, setStat2Label] = useState('')
   const [stat3Num, setStat3Num] = useState('')
   const [stat3Label, setStat3Label] = useState('')
+  const [casualImg, setCasualImg] = useState('')
+  const [formalImg, setFormalImg] = useState('')
+  const [partyImg, setPartyImg] = useState('')
+  const [gymImg, setGymImg] = useState('')
   const [savingSettings, setSavingSettings] = useState(false)
 
   const API_URL = 'http://localhost:5000/api'
@@ -110,6 +114,19 @@ const AdminPage = ({ onNavigateHome }) => {
       }
     } catch (err) {
       console.error('Failed to load settings:', err)
+    }
+
+    try {
+      const res2 = await fetch(`${API_URL}/config/dress-style`)
+      if (res2.ok) {
+        const data2 = await res2.json()
+        setCasualImg(data2.casual || '')
+        setFormalImg(data2.formal || '')
+        setPartyImg(data2.party || '')
+        setGymImg(data2.gym || '')
+      }
+    } catch (err) {
+      console.error('Failed to load dress style settings:', err)
     }
   }
 
@@ -291,8 +308,21 @@ const AdminPage = ({ onNavigateHome }) => {
           ]
         })
       })
-      if (res.ok) {
-        setSuccessMsg('Hero settings saved successfully!')
+      
+      const res2 = await fetch(`${API_URL}/config/dress-style`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          casual: casualImg,
+          formal: formalImg,
+          party: partyImg,
+          gym: gymImg
+        })
+      })
+
+      if (res.ok && res2.ok) {
+        setSuccessMsg('Settings saved successfully!')
       } else {
         const data = await res.json()
         setErrorMsg(data.message || 'Failed to save settings')
@@ -609,7 +639,28 @@ const AdminPage = ({ onNavigateHome }) => {
               </div>
             </div>
             
-            <button className="admin-save-btn" type="submit" disabled={savingSettings}>
+            <hr style={{ margin: '32px 0', borderColor: 'var(--gray-300)' }} />
+            
+            <h3 className="settings-sub-title" style={{ marginBottom: '12px', fontFamily: 'var(--font-display)', fontWeight: '700' }}>Browse By Dress Style Images</h3>
+            
+            <div className="form-group">
+              <label>Casual Image URL</label>
+              <input type="text" required value={casualImg} onChange={e => setCasualImg(e.target.value)} placeholder="https://..." className="admin-settings-input" />
+            </div>
+            <div className="form-group">
+              <label>Formal Image URL</label>
+              <input type="text" required value={formalImg} onChange={e => setFormalImg(e.target.value)} placeholder="https://..." className="admin-settings-input" />
+            </div>
+            <div className="form-group">
+              <label>Party Image URL</label>
+              <input type="text" required value={partyImg} onChange={e => setPartyImg(e.target.value)} placeholder="https://..." className="admin-settings-input" />
+            </div>
+            <div className="form-group">
+              <label>Gym Image URL</label>
+              <input type="text" required value={gymImg} onChange={e => setGymImg(e.target.value)} placeholder="https://..." className="admin-settings-input" />
+            </div>
+
+            <button className="admin-save-btn" type="submit" disabled={savingSettings} style={{ marginTop: '24px' }}>
               {savingSettings ? 'Saving...' : 'Save settings'}
             </button>
           </form>

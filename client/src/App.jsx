@@ -150,8 +150,8 @@ function App() {
       <main>
         <Hero />
         <Brands onBrandClick={(brandName) => navigateCategory('brand-' + brandName)} />
-        <NewArrivals onProductClick={(id) => navigateProduct(id, 'casual')} />
-        <TopSelling onProductClick={(id) => navigateProduct(id, 'casual')} />
+        <NewArrivals onProductClick={(id) => navigateProduct(id, 'casual')} onViewAll={() => navigateCategory('new-arrivals')} />
+        <TopSelling onProductClick={(id) => navigateProduct(id, 'casual')} onViewAll={() => navigateCategory('top-selling')} />
         <DressStyle onCategoryClick={navigateCategory} />
         <Testimonials />
         <Newsletter />

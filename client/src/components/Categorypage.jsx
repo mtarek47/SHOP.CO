@@ -52,6 +52,8 @@ const CategoryPage = ({ category, onNavigateHome, onProductClick, onCategoryClic
       queryFilters.isOnSale = true;
     } else if (category === 'new-arrivals') {
       queryFilters.isNewArrival = true;
+    } else if (category === 'top-selling') {
+      // Just let it fetch all products sorted by rating (which is the default sortBy)
     } else if (category && category.startsWith('brand-')) {
       queryFilters.brand = category.replace('brand-', '');
     } else {
@@ -91,6 +93,7 @@ const CategoryPage = ({ category, onNavigateHome, onProductClick, onCategoryClic
   let categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
   if (category === 'on-sale') categoryLabel = 'On Sale';
   if (category === 'new-arrivals') categoryLabel = 'New Arrivals';
+  if (category === 'top-selling') categoryLabel = 'Top Selling';
   if (category && category.startsWith('brand-')) categoryLabel = `Brand: ${category.replace('brand-', '')}`;
   
   // Client-side pagination based on dynamic database length
