@@ -25,7 +25,7 @@ export const CartProvider = ({ children }) => {
         cartId,
         productId: product.id,
         name: product.name,
-        image: product.images?.[0] || product.image,
+        image: product.image || (product.images && product.images[0]),
         size,
         color: colorName || 'Default',
         price: product.price,

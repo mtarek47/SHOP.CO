@@ -69,6 +69,44 @@ const CartPage = ({ onNavigateHome }) => {
     if (promoCode.trim()) setPromoApplied(true)
   }
 
+  const handlePayExistingOrder = async (orderId, orderPaymentMethod) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/payments/${orderId}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ paymentMethod: orderPaymentMethod })
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.message || 'Payment initiation failed');
+      }
+    } catch (err) {
+      alert('Failed to reach backend server');
+    }
+  };
+
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to cancel this order?')) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/orders/${orderId}/cancel`, {
+        method: 'PUT',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert('Order cancelled successfully');
+        loadMyOrders();
+      } else {
+        alert(data.message || 'Cancellation failed');
+      }
+    } catch (err) {
+      alert('Failed to cancel order');
+    }
+  };
+
   const handleProceedToPayment = async (e) => {
     e.preventDefault()
     if (!user) {
@@ -147,7 +185,7 @@ const CartPage = ({ onNavigateHome }) => {
                 <React.Fragment key={item.cartId}>
                   <div className="cart-item">
                     <div className="cart-item-img-wrap">
-                      <img src={item.image} alt={item.name} className="cart-item-img" />
+                      <img src={item.image || 'https://placehold.co/100x100/f2f0f1/333333?text=No+Image'} alt={item.name} className="cart-item-img" />
                     </div>
 
                     <div className="cart-item-info">
@@ -423,7 +461,7 @@ const CartPage = ({ onNavigateHome }) => {
                     <div className="order-card-items">
                       {order.items.map((item, index) => (
                         <div key={index} className="order-item-row">
-                          <img src={item.image} alt={item.name} className="order-item-img" />
+                          <img src={item.image || 'https://placehold.co/100x100/f2f0f1/333333?text=No+Image'} alt={item.name} className="order-item-img" />
                           <div className="order-item-info">
                             <p className="order-item-name">{item.name}</p>
                             <p className="order-item-meta">Size: {item.size} | Color: {item.color}</p>
@@ -434,6 +472,24 @@ const CartPage = ({ onNavigateHome }) => {
                     </div>
                     
                     <div className="order-card-footer">
+                      <div className="order-actions">
+                        {(order.paymentStatus === 'pending' || order.paymentStatus === 'failed') && order.deliveryStatus !== 'cancelled' && (
+                          <>
+                            <button 
+                              className="order-btn pay-btn" 
+                              onClick={() => handlePayExistingOrder(order._id, order.paymentMethod)}
+                            >
+                              Pay Now
+                            </button>
+                            <button 
+                              className="order-btn cancel-btn" 
+                              onClick={() => handleCancelOrder(order._id)}
+                            >
+                              Cancel Order
+                            </button>
+                          </>
+                        )}
+                      </div>
                       <p className="order-total-text">Total: <strong>BDT {order.totalAmount}</strong></p>
                     </div>
                   </div>

@@ -686,7 +686,43 @@
   border-top: 1px solid var(--gray-100);
   padding-top: 16px;
   margin-top: 16px;
-  text-align: right;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.order-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: var(--font-primary);
+}
+
+.pay-btn {
+  background-color: var(--black);
+  color: var(--white);
+  border: none;
+}
+.pay-btn:hover {
+  background-color: var(--gray-600);
+}
+
+.cancel-btn {
+  background-color: transparent;
+  color: var(--red);
+  border: 1px solid var(--red);
+}
+.cancel-btn:hover {
+  background-color: var(--red);
+  color: var(--white);
 }
 
 .order-total-text {

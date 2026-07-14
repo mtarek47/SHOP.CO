@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   checkout,
+  payExistingOrder,
   verifyPayment,
   sslCommerzSuccess,
   sslCommerzFailOrCancel,
@@ -13,6 +14,9 @@ const router = express.Router();
 
 // Checkout session creation
 router.post('/payments/checkout', protect, checkout);
+
+// Pay for an existing order
+router.post('/payments/:id/pay', protect, payExistingOrder);
 
 // Manual verification endpoint (front-end success page callback)
 router.get('/payments/verify', protect, verifyPayment);

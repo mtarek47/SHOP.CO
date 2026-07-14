@@ -90,6 +90,59 @@ export const checkout = async (req, res) => {
   }
 };
 
+// @desc    Pay for an existing pending order
+// @route   POST /api/payments/:id/pay
+// @access  Private
+export const payExistingOrder = async (req, res) => {
+  const { paymentMethod } = req.body;
+
+  if (!paymentMethod || !['stripe', 'sslcommerz'].includes(paymentMethod)) {
+    return res.status(400).json({ message: 'Invalid or missing payment method' });
+  }
+
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    if (order.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to pay for this order' });
+    }
+
+    if (order.paymentStatus !== 'pending' && order.paymentStatus !== 'failed') {
+      return res.status(400).json({ message: 'Order is not in pending or failed status' });
+    }
+
+    // Update the payment method if changed
+    order.paymentMethod = paymentMethod;
+    
+    // Set status to pending if it was failed and user is retrying
+    order.paymentStatus = 'pending';
+
+    const gateway = PaymentService.getGateway(paymentMethod);
+    const customerDetails = {
+      email: order.shippingAddress.email || req.user.email,
+      name: req.user.name,
+      phone: order.shippingAddress.phone || '',
+    };
+
+    const paymentSession = await gateway.createSession(order, customerDetails);
+
+    order.paymentId = paymentSession.paymentId;
+    await order.save();
+
+    res.status(200).json({
+      url: paymentSession.url,
+      orderId: order._id,
+    });
+  } catch (error) {
+    console.error('Pay existing order failed:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Verify payment status of an order manually (fallback/redirect callback verification)
 // @route   GET /api/payments/verify
 // @access  Private
