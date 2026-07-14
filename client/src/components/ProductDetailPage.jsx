@@ -76,6 +76,14 @@ const ProductDetailPage = ({ productId, onNavigateHome, onProductClick, onCatego
 
   const categoryLabel = product.category.charAt(0).toUpperCase() + product.category.slice(1)
 
+  // Construct the gallery images from the specific fields
+  const galleryImages = [
+    product.image,
+    product.backViewImage,
+    product.modelViewImage,
+    ...(product.images || []) // fallback to include any extra images if present
+  ].filter(Boolean); // removes undefined/null values
+
   return (
     <div className="pdp">
       <div className="container">
@@ -98,8 +106,8 @@ const ProductDetailPage = ({ productId, onNavigateHome, onProductClick, onCatego
           <div className="pdp-gallery">
             {/* Thumbnails - desktop left, mobile bottom */}
             <div className="pdp-thumbs">
-              {product.images && product.images.length > 0 ? (
-                product.images.map((img, i) => (
+              {galleryImages.length > 0 ? (
+                galleryImages.map((img, i) => (
                   <button
                     key={i}
                     className={`pdp-thumb ${activeImg === i ? 'pdp-thumb--active' : ''}`}
@@ -118,7 +126,7 @@ const ProductDetailPage = ({ productId, onNavigateHome, onProductClick, onCatego
             {/* Main image */}
             <div className="pdp-main-img-wrap">
               <img 
-                src={product.images && product.images.length > 0 ? product.images[activeImg] : product.image} 
+                src={galleryImages.length > 0 ? galleryImages[activeImg] : product.image} 
                 alt={product.name} 
                 className="pdp-main-img" 
               />

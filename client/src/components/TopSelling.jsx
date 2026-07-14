@@ -7,7 +7,7 @@ const TopSelling = ({ onProductClick }) => {
   const [products, setProducts] = useState([])
 
   useEffect(() => {
-    fetchProducts({ category: 'casual' }).then(data => {
+    fetchProducts({ sort: 'rating' }).then(data => {
       setProducts(data.slice(4, 8))
     })
   }, [])

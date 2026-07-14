@@ -34,10 +34,28 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Please add a main product image URL'],
     },
+    backViewImage: {
+      type: String,
+    },
+    modelViewImage: {
+      type: String,
+    },
     category: {
       type: String,
       required: [true, 'Please add a category'],
       enum: ['casual', 'formal', 'party', 'gym'],
+    },
+    brand: {
+      type: String,
+      default: '',
+    },
+    isOnSale: {
+      type: Boolean,
+      default: false,
+    },
+    isNewArrival: {
+      type: Boolean,
+      default: false,
     },
     description: {
       type: String,

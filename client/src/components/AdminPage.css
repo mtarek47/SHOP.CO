@@ -145,6 +145,132 @@
   padding: 4px;
 }
 
+/* Toolbar & Filters */
+.admin-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.admin-search {
+  display: flex;
+  align-items: center;
+  background-color: var(--off-white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-full);
+  padding: 8px 16px;
+  width: 100%;
+  max-width: 400px;
+  transition: border-color var(--transition);
+}
+
+.admin-search:focus-within {
+  border-color: var(--black);
+}
+
+.admin-search-icon {
+  margin-right: 8px;
+}
+
+.admin-search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-family: var(--font-primary);
+  font-size: 14px;
+}
+
+.admin-filters {
+  display: flex;
+  gap: 12px;
+}
+
+.admin-filter-select {
+  padding: 10px 16px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--gray-200);
+  background-color: var(--white);
+  font-family: var(--font-primary);
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+}
+
+.admin-filter-select:focus {
+  border-color: var(--black);
+}
+
+/* Badges & Text Styling */
+.admin-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-sale {
+  background-color: #FFEBEE;
+  color: #C62828;
+}
+
+.badge-new {
+  background-color: #E3F2FD;
+  color: #0D47A1;
+}
+
+.admin-original-price {
+  text-decoration: line-through;
+  color: var(--gray-400);
+  font-size: 12px;
+  margin-left: 6px;
+}
+
+/* Empty State */
+.admin-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background-color: var(--off-white);
+  border-radius: var(--radius-xl);
+  border: 1px dashed var(--gray-300);
+}
+
+.admin-empty-state h3 {
+  margin-top: 16px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.admin-empty-state p {
+  color: var(--gray-500);
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+
+.admin-clear-filters-btn {
+  padding: 10px 24px;
+  background-color: var(--white);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.admin-clear-filters-btn:hover {
+  border-color: var(--black);
+  background-color: var(--gray-100);
+}
+
 /* Status Controls */
 .status-badge {
   display: inline-block;

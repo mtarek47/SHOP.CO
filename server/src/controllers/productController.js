@@ -6,14 +6,19 @@ import Product from '../models/Product.js';
 // @access  Public
 export const getProducts = async (req, res) => {
   try {
-    const { category, search, minPrice, maxPrice, sizes, colors, sort } = req.query;
+    const { category, search, minPrice, maxPrice, sizes, colors, sort, isOnSale, isNewArrival, brand } = req.query;
 
     const queryObj = {};
 
     // 1. Category Filter
-    if (category && category !== 'all') {
+    if (category && category !== 'all' && category !== 'on-sale' && category !== 'new-arrivals' && !category.startsWith('brand-')) {
       queryObj.category = category.toLowerCase();
     }
+    
+    // Custom Tag Filters
+    if (isOnSale === 'true') queryObj.isOnSale = true;
+    if (isNewArrival === 'true') queryObj.isNewArrival = true;
+    if (brand) queryObj.brand = { $regex: new RegExp(`^${brand}$`, 'i') }; // case-insensitive exact match
 
     // 2. Search Text Filter
     if (search) {

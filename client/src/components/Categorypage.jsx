@@ -7,7 +7,7 @@ import './CategoryPage.css'
 const PRODUCTS_PER_PAGE = 9
 const sortOptions = ['Most Popular', 'Newest', 'Price: Low to High', 'Price: High to Low']
 
-const CategoryPage = ({ category, onNavigateHome, onProductClick }) => {
+const CategoryPage = ({ category, onNavigateHome, onProductClick, onCategoryClick }) => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
@@ -43,10 +43,19 @@ const CategoryPage = ({ category, onNavigateHome, onProductClick }) => {
     // In our client, color options have ID names: 'green', 'red', 'yellow' etc. 
     // We map them if needed or send color IDs. Let's send color IDs, backend supports check in array
     const queryFilters = {
-      category: category,
       minPrice: filters.priceMin,
       maxPrice: filters.priceMax,
       sort: getBackendSortKey(sortBy)
+    }
+
+    if (category === 'on-sale') {
+      queryFilters.isOnSale = true;
+    } else if (category === 'new-arrivals') {
+      queryFilters.isNewArrival = true;
+    } else if (category && category.startsWith('brand-')) {
+      queryFilters.brand = category.replace('brand-', '');
+    } else {
+      queryFilters.category = category;
     }
 
     if (filters.colors && filters.colors.length > 0) {
@@ -79,7 +88,10 @@ const CategoryPage = ({ category, onNavigateHome, onProductClick }) => {
     })
   }, [category, filters, sortBy])
 
-  const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1)
+  let categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
+  if (category === 'on-sale') categoryLabel = 'On Sale';
+  if (category === 'new-arrivals') categoryLabel = 'New Arrivals';
+  if (category && category.startsWith('brand-')) categoryLabel = `Brand: ${category.replace('brand-', '')}`;
   
   // Client-side pagination based on dynamic database length
   const totalProducts = products.length
@@ -119,7 +131,7 @@ const CategoryPage = ({ category, onNavigateHome, onProductClick }) => {
 
         <div className="category-layout">
           <aside className="category-sidebar">
-            <FilterSidebar filters={filters} setFilters={setFilters} category={category} />
+            <FilterSidebar filters={filters} setFilters={setFilters} category={category} onCategoryClick={onCategoryClick} />
           </aside>
 
           <div className="category-main">
@@ -205,7 +217,7 @@ const CategoryPage = ({ category, onNavigateHome, onProductClick }) => {
               <h3>Filters</h3>
               <button className="filter-drawer-close" onClick={() => setFilterOpen(false)}>✕</button>
             </div>
-            <FilterSidebar filters={filters} setFilters={setFilters} category={category} isMobile onApply={() => setFilterOpen(false)} />
+            <FilterSidebar filters={filters} setFilters={setFilters} category={category} isMobile onApply={() => setFilterOpen(false)} onCategoryClick={(cat) => { setFilterOpen(false); if(onCategoryClick) onCategoryClick(cat); }} />
           </div>
         </div>
       )}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import './FilterSidebar.css'
 
 const colorOptions = [
@@ -38,9 +38,25 @@ const FilterSection = ({ title, children, defaultOpen = true }) => {
   )
 }
 
-const FilterSidebar = ({ filters, setFilters, category, isMobile = false, onApply }) => {
+const FilterSidebar = ({ filters, setFilters, category, isMobile = false, onApply, onCategoryClick }) => {
   const [localPriceMin, setLocalPriceMin] = useState(filters.priceMin)
   const [localPriceMax, setLocalPriceMax] = useState(filters.priceMax)
+
+  // Sync local state if filters prop changes from outside (e.g. route change)
+  useEffect(() => {
+    setLocalPriceMin(filters.priceMin)
+    setLocalPriceMax(filters.priceMax)
+  }, [filters.priceMin, filters.priceMax])
+
+  // Auto-apply price changes after 500ms debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localPriceMin !== filters.priceMin || localPriceMax !== filters.priceMax) {
+        setFilters((prev) => ({ ...prev, priceMin: localPriceMin, priceMax: localPriceMax }))
+      }
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [localPriceMin, localPriceMax, setFilters, filters.priceMin, filters.priceMax])
 
   const toggleColor = (colorId) => {
     setFilters((prev) => ({
@@ -82,7 +98,7 @@ const FilterSidebar = ({ filters, setFilters, category, isMobile = false, onAppl
       <FilterSection title="" defaultOpen={true}>
         <nav className="filter-categories">
           {dressStyleOptions.map((style) => (
-            <div key={style} className="filter-category-item">
+            <div key={style} className="filter-category-item" onClick={() => onCategoryClick && onCategoryClick(categoryLinks[style])} style={{ cursor: 'pointer' }}>
               <span
                 className={`filter-category-link ${categoryLinks[style] === category ? 'filter-category-link--active' : ''}`}
               >
@@ -183,25 +199,7 @@ const FilterSidebar = ({ filters, setFilters, category, isMobile = false, onAppl
         </div>
       </FilterSection>
 
-      <hr className="filter-divider" />
 
-      {/* Dress Style */}
-      <FilterSection title="Dress Style">
-        <nav className="filter-categories">
-          {dressStyleOptions.map((style) => (
-            <div key={style} className="filter-category-item">
-              <span
-                className={`filter-category-link ${categoryLinks[style] === category ? 'filter-category-link--active' : ''}`}
-              >
-                {style}
-              </span>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-          ))}
-        </nav>
-      </FilterSection>
 
       {/* Apply button */}
       <button className="filter-apply-btn" onClick={handleApply}>

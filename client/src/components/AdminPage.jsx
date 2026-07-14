@@ -6,6 +6,11 @@ const AdminPage = ({ onNavigateHome }) => {
   const [products, setProducts] = useState([])
   const [orders, setOrders] = useState([])
   
+  // Filter & Search States
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterCategory, setFilterCategory] = useState('all')
+  const [filterBrand, setFilterBrand] = useState('all')
+
   // Loading states
   const [loadingProds, setLoadingProds] = useState(true)
   const [loadingOrders, setLoadingOrders] = useState(true)
@@ -20,7 +25,12 @@ const AdminPage = ({ onNavigateHome }) => {
   const [prodOriginalPrice, setProdOriginalPrice] = useState('')
   const [prodDiscount, setProdDiscount] = useState('')
   const [prodImage, setProdImage] = useState('')
+  const [prodBackViewImage, setProdBackViewImage] = useState('')
+  const [prodModelViewImage, setProdModelViewImage] = useState('')
   const [prodCategory, setProdCategory] = useState('casual')
+  const [prodBrand, setProdBrand] = useState('')
+  const [prodIsOnSale, setProdIsOnSale] = useState(false)
+  const [prodIsNewArrival, setProdIsNewArrival] = useState(false)
   const [prodDesc, setProdDesc] = useState('')
   const [prodColors, setProdColors] = useState('')
   const [prodSizes, setProdSizes] = useState('')
@@ -110,7 +120,12 @@ const AdminPage = ({ onNavigateHome }) => {
     setProdOriginalPrice('')
     setProdDiscount('')
     setProdImage('')
+    setProdBackViewImage('')
+    setProdModelViewImage('')
     setProdCategory('casual')
+    setProdBrand('')
+    setProdIsOnSale(false)
+    setProdIsNewArrival(false)
     setProdDesc('')
     setProdColors('')
     setProdSizes('')
@@ -126,7 +141,12 @@ const AdminPage = ({ onNavigateHome }) => {
     setProdOriginalPrice(p.originalPrice || '')
     setProdDiscount(p.discount || '')
     setProdImage(p.image)
+    setProdBackViewImage(p.backViewImage || '')
+    setProdModelViewImage(p.modelViewImage || '')
     setProdCategory(p.category)
+    setProdBrand(p.brand || '')
+    setProdIsOnSale(p.isOnSale || false)
+    setProdIsNewArrival(p.isNewArrival || false)
     setProdDesc(p.description)
     setProdColors(p.colors ? p.colors.join(',') : '')
     setProdSizes(p.sizes ? p.sizes.join(',') : '')
@@ -146,7 +166,12 @@ const AdminPage = ({ onNavigateHome }) => {
       originalPrice: prodOriginalPrice ? Number(prodOriginalPrice) : undefined,
       discount: prodDiscount ? Number(prodDiscount) : undefined,
       image: prodImage,
+      backViewImage: prodBackViewImage,
+      modelViewImage: prodModelViewImage,
       category: prodCategory,
+      brand: prodBrand,
+      isOnSale: prodIsOnSale,
+      isNewArrival: prodIsNewArrival,
       description: prodDesc,
       colors: prodColors ? prodColors.split(',').map(s => s.trim()) : [],
       sizes: prodSizes ? prodSizes.split(',').map(s => s.trim()) : [],
@@ -280,6 +305,18 @@ const AdminPage = ({ onNavigateHome }) => {
     }
   }
 
+  // Get unique brands for the filter dropdown
+  const uniqueBrands = Array.from(new Set(products.map(p => p.brand).filter(b => b && b.trim() !== '')))
+
+  // Compute filtered products
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    const matchesCategory = filterCategory === 'all' || p.category === filterCategory
+    const matchesBrand = filterBrand === 'all' || p.brand === filterBrand
+    return matchesSearch && matchesCategory && matchesBrand
+  })
+
   return (
     <div className="admin-page container">
       <div className="admin-header">
@@ -315,12 +352,61 @@ const AdminPage = ({ onNavigateHome }) => {
       {activeTab === 'products' && (
         <div className="admin-tab-content">
           <div className="tab-actions-header">
-            <h2>Catalog Products ({products.length})</h2>
+            <h2>Catalog Products ({filteredProducts.length})</h2>
             <button onClick={openAddModal} className="admin-add-prod-btn">+ Add New Product</button>
+          </div>
+
+          <div className="admin-toolbar">
+            <div className="admin-search">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="admin-search-icon">
+                <path d="M15.75 15.75L11.25 11.25M12.75 7.5C12.75 10.3995 10.3995 12.75 7.5 12.75C4.60051 12.75 2.25 10.3995 2.25 7.5C2.25 4.60051 4.60051 2.25 7.5 2.25C10.3995 2.25 12.75 4.60051 12.75 7.5Z" stroke="#6B6B6B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <input 
+                type="text" 
+                placeholder="Search products..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="admin-search-input"
+              />
+            </div>
+            
+            <div className="admin-filters">
+              <select 
+                value={filterCategory} 
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="admin-filter-select"
+              >
+                <option value="all">All Categories</option>
+                <option value="casual">Casual</option>
+                <option value="formal">Formal</option>
+                <option value="party">Party</option>
+                <option value="gym">Gym</option>
+              </select>
+              
+              <select 
+                value={filterBrand} 
+                onChange={(e) => setFilterBrand(e.target.value)}
+                className="admin-filter-select"
+              >
+                <option value="all">All Brands</option>
+                {uniqueBrands.map(b => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {loadingProds ? (
             <p>Loading products...</p>
+          ) : filteredProducts.length === 0 ? (
+            <div className="admin-empty-state">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <h3>No products found</h3>
+              <p>Try adjusting your search or filters.</p>
+              <button onClick={() => { setSearchQuery(''); setFilterCategory('all'); setFilterBrand('all'); }} className="admin-clear-filters-btn">Clear Filters</button>
+            </div>
           ) : (
             <div className="table-responsive">
               <table className="admin-table">
@@ -334,14 +420,25 @@ const AdminPage = ({ onNavigateHome }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map(p => (
+                  {filteredProducts.map(p => (
                     <tr key={p._id}>
                       <td>
                         <img src={p.image} alt={p.name} className="admin-prod-thumb" />
                       </td>
-                      <td style={{ fontWeight: '600' }}>{p.name}</td>
-                      <td>BDT {p.price} {p.originalPrice && <span style={{ textDecoration: 'line-through', color: 'var(--gray-400)', fontSize: '12px', marginLeft: '6px' }}>BDT {p.originalPrice}</span>}</td>
-                      <td style={{ textTransform: 'capitalize' }}>{p.category}</td>
+                      <td>
+                        <div style={{ fontWeight: '600' }}>{p.name}</div>
+                        {(p.isOnSale || p.isNewArrival) && (
+                          <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                            {p.isOnSale && <span className="admin-badge badge-sale">Sale</span>}
+                            {p.isNewArrival && <span className="admin-badge badge-new">New</span>}
+                          </div>
+                        )}
+                      </td>
+                      <td>BDT {p.price} {p.originalPrice && <span className="admin-original-price">BDT {p.originalPrice}</span>}</td>
+                      <td>
+                        <div style={{ textTransform: 'capitalize' }}>{p.category}</div>
+                        {p.brand && <div style={{ fontSize: '11px', color: 'var(--gray-600)' }}>{p.brand}</div>}
+                      </td>
                       <td>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button onClick={() => openEditModal(p)} className="action-btn-edit">Edit</button>
@@ -562,13 +659,40 @@ const AdminPage = ({ onNavigateHome }) => {
               </div>
 
               <div className="form-group">
-                <label>Image URL</label>
+                <label>Normal View Image URL</label>
                 <input type="text" required value={prodImage} onChange={e => setProdImage(e.target.value)} placeholder="https://placehold.co/400x480..." />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Back View Image URL (Optional)</label>
+                  <input type="text" value={prodBackViewImage} onChange={e => setProdBackViewImage(e.target.value)} placeholder="https://..." />
+                </div>
+                <div className="form-group">
+                  <label>Model View Image URL (Optional)</label>
+                  <input type="text" value={prodModelViewImage} onChange={e => setProdModelViewImage(e.target.value)} placeholder="https://..." />
+                </div>
               </div>
 
               <div className="form-group">
                 <label>Description</label>
                 <textarea required value={prodDesc} onChange={e => setProdDesc(e.target.value)} rows="3" placeholder="Provide product descriptions..."></textarea>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '8px' }}>
+                  <input type="checkbox" id="isOnSale" checked={prodIsOnSale} onChange={e => setProdIsOnSale(e.target.checked)} />
+                  <label htmlFor="isOnSale" style={{ marginBottom: 0 }}>Mark as On Sale</label>
+                </div>
+                <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '8px' }}>
+                  <input type="checkbox" id="isNewArrival" checked={prodIsNewArrival} onChange={e => setProdIsNewArrival(e.target.checked)} />
+                  <label htmlFor="isNewArrival" style={{ marginBottom: 0 }}>Mark as New Arrival</label>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Brand (Optional)</label>
+                <input type="text" value={prodBrand} onChange={e => setProdBrand(e.target.value)} placeholder="e.g. ZARA" />
               </div>
 
               <div className="form-group">

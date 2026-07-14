@@ -8,7 +8,7 @@ import Order from '../models/Order.js';
 // @access  Private/Admin
 export const createProduct = async (req, res) => {
   try {
-    const { name, price, originalPrice, discount, bgColor, image, category, description, images, colors, sizes } = req.body;
+    const { name, price, originalPrice, discount, bgColor, image, backViewImage, modelViewImage, category, brand, isOnSale, isNewArrival, description, images, colors, sizes } = req.body;
 
     const product = new Product({
       name,
@@ -17,7 +17,12 @@ export const createProduct = async (req, res) => {
       discount: discount ? Number(discount) : 0,
       bgColor: bgColor || '#f2f0f1',
       image: image || 'https://placehold.co/400x480?text=New+Product',
+      backViewImage,
+      modelViewImage,
       category,
+      brand: brand || '',
+      isOnSale: isOnSale === true || isOnSale === 'true',
+      isNewArrival: isNewArrival === true || isNewArrival === 'true',
       description,
       images: images || [],
       colors: colors || [],
@@ -36,7 +41,7 @@ export const createProduct = async (req, res) => {
 // @access  Private/Admin
 export const updateProduct = async (req, res) => {
   try {
-    const { name, price, originalPrice, discount, bgColor, image, category, description, images, colors, sizes } = req.body;
+    const { name, price, originalPrice, discount, bgColor, image, backViewImage, modelViewImage, category, brand, isOnSale, isNewArrival, description, images, colors, sizes } = req.body;
 
     const product = await Product.findById(req.params.id);
 
@@ -47,7 +52,12 @@ export const updateProduct = async (req, res) => {
       product.discount = discount !== undefined ? Number(discount) : product.discount;
       product.bgColor = bgColor || product.bgColor;
       product.image = image || product.image;
+      product.backViewImage = backViewImage !== undefined ? backViewImage : product.backViewImage;
+      product.modelViewImage = modelViewImage !== undefined ? modelViewImage : product.modelViewImage;
       product.category = category || product.category;
+      if (brand !== undefined) product.brand = brand;
+      if (isOnSale !== undefined) product.isOnSale = isOnSale === true || isOnSale === 'true';
+      if (isNewArrival !== undefined) product.isNewArrival = isNewArrival === true || isNewArrival === 'true';
       product.description = description || product.description;
       product.images = images || product.images;
       product.colors = colors || product.colors;

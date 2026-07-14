@@ -7,7 +7,7 @@ const NewArrivals = ({ onProductClick }) => {
   const [products, setProducts] = useState([])
 
   useEffect(() => {
-    fetchProducts({ category: 'casual' }).then(data => {
+    fetchProducts({ isNewArrival: true }).then(data => {
       setProducts(data.slice(0, 4))
     })
   }, [])

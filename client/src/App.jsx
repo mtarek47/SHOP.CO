@@ -23,29 +23,52 @@ function App() {
     if (window.location.pathname === '/payment-success' || window.location.search.includes('gateway=')) {
       return { page: 'payment-success' }
     }
-    // Initialize from localStorage
-    const saved = localStorage.getItem('currentRoute')
-    return saved ? JSON.parse(saved) : { page: 'home' }
+    // Initialize from history state if available
+    if (window.history.state && window.history.state.route) {
+      return window.history.state.route
+    }
+    return { page: 'home' }
   })
 
-  // Save route to localStorage whenever it changes
+  // Listen for browser back/forward buttons
   useEffect(() => {
-    localStorage.setItem('currentRoute', JSON.stringify(route))
-  }, [route])
+    const handlePopState = (e) => {
+      if (e.state && e.state.route) {
+        setRoute(e.state.route)
+      } else {
+        setRoute({ page: 'home' })
+      }
+    }
+    
+    // Ensure initial state is pushed so back button works correctly
+    if (!window.history.state) {
+      window.history.replaceState({ route }, '')
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
+  // Custom navigate function that pushes to history
+  const navigateTo = (newRoute) => {
+    window.history.pushState({ route: newRoute }, '')
+    setRoute(newRoute)
+    scroll()
+  }
 
   const scroll = () => window.scrollTo({ top: 0, behavior: 'smooth' })
-  const navigateHome     = ()         => { setRoute({ page: 'home' }); scroll() }
-  const navigateCategory = (cat)      => { setRoute({ page: 'category', category: cat }); scroll() }
-  const navigateProduct  = (id, cat)  => { setRoute({ page: 'product', productId: id, category: cat }); scroll() }
-  const navigateCart     = ()         => { setRoute({ page: 'cart' }); scroll() }
-  const navigateAdmin    = ()         => { setRoute({ page: 'admin' }); scroll() }
+  const navigateHome     = ()         => navigateTo({ page: 'home' })
+  const navigateCategory = (cat)      => navigateTo({ page: 'category', category: cat })
+  const navigateProduct  = (id, cat)  => navigateTo({ page: 'product', productId: id, category: cat })
+  const navigateCart     = ()         => navigateTo({ page: 'cart' })
+  const navigateAdmin    = ()         => navigateTo({ page: 'admin' })
 
   const sharedProps = {
     onLogoClick:        navigateHome,
     onCartClick:        navigateCart,
     onCategoryClick:    navigateCategory,
-    onSaleClick:        () => navigateCategory('casual'),
-    onNewArrivalsClick: () => navigateCategory('casual'),
+    onSaleClick:        () => navigateCategory('on-sale'),
+    onNewArrivalsClick: () => navigateCategory('new-arrivals'),
     onProductClick:     navigateProduct,
     onAdminClick:       navigateAdmin,
   }
@@ -110,6 +133,7 @@ function App() {
         <CategoryPage
           category={route.category}
           onNavigateHome={navigateHome}
+          onCategoryClick={navigateCategory}
           onProductClick={(id) => navigateProduct(id, route.category)}
         />
         <Newsletter />
@@ -125,7 +149,7 @@ function App() {
       <Navbar {...sharedProps} />
       <main>
         <Hero />
-        <Brands />
+        <Brands onBrandClick={(brandName) => navigateCategory('brand-' + brandName)} />
         <NewArrivals onProductClick={(id) => navigateProduct(id, 'casual')} />
         <TopSelling onProductClick={(id) => navigateProduct(id, 'casual')} />
         <DressStyle onCategoryClick={navigateCategory} />
