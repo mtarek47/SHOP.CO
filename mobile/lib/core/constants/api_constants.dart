@@ -5,10 +5,9 @@ class ApiConstants {
 
   /// Change this to your machine's local IP when using a physical device
   /// Android Emulator: http://10.0.2.2:5000/api
-  /// iOS Simulator:    http://127.0.0.1:5000/api  ← use IP, NOT 'localhost'
-  /// Physical Device:  http://<your-local-ip>:5000/api
-  static const String baseUrl = 'http://127.0.0.1:5000/api';
-
+  /// iOS Simulator: http://localhost:5000/api
+  /// Physical Device: http://<your-local-ip>:5000/api
+  static const String baseUrl = 'http://localhost:5000/api';
 
   // Products
   static const String products = '$baseUrl/products';
@@ -25,7 +24,8 @@ class ApiConstants {
   static const String myOrders = '$baseUrl/orders/myorders';
 
   // Payment
-  static const String checkout = '$baseUrl/payments/checkout';
+  static const String stripePayment = '$baseUrl/payment/stripe';
+  static const String sslcommerzPayment = '$baseUrl/payment/sslcommerz';
 
   // Config
   static const String heroConfig = '$baseUrl/config/hero';
